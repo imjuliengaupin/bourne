@@ -10,11 +10,11 @@
 [![CI/CD](https://github.com/imjuliengaupin/bourne/actions/workflows/devops.yml/badge.svg?branch=PROD)](https://github.com/imjuliengaupin/bourne/actions/workflows/devops.yml)
 [![Coverage](https://coveralls.io/repos/github/imjuliengaupin/bourne/badge.svg?branch=PROD)](https://coveralls.io/github/imjuliengaupin/bourne?branch=PROD)
 
-<a href="#-demo">View Demo</a>
+<a href="#demo">View Demo</a>
 ·
-<a href="#-cicd">View Docs</a>
+<a href="#cicd">View Docs</a>
 ·
-<a href="#️-architecture">View Architecture</a>
+<a href="#️architecture">View Architecture</a>
 
 </div>
 
