@@ -1,0 +1,46 @@
+[
+  {
+    // =========================
+    // REQUIRED CONFIGURATIONS
+    // =========================
+
+    // 1. Task Name
+    // Unique identifier for this workflow task.
+    "task_name": "",
+
+    // 2. Agent Name
+    // Name of the agent class that will execute this task.
+    // Supported agents: DataIngestionAgent, DataValidationAgent, DataTransformationAgent, DataStorageAgent
+    "agent_name": "",
+
+    // 3. Agent Method Name
+    // Name of the method on the agent to invoke.
+    // Supported methods: ingest_data, validate_data, transform_data, save_data
+    // Must match the selected agent_name
+    "agent_method_name": "",
+
+    // =========================
+    // OPTIONAL CONFIGURATIONS
+    // =========================
+
+    // 4. Task Dependencies
+    // List of task_name(s) that must complete before this task runs.
+    // Leave empty if this task has no dependencies
+    "depends_on": [],
+
+    // 5. Input Requirements
+    // Whether this task expects input data from a previous task.
+    // Use true for tasks that process data, false for initial tasks
+    "requires_input": false,
+
+    // 6. Output Production
+    // Whether this task produces output data for subsequent tasks.
+    // Use true for tasks that generate data, false for final tasks
+    "produces_output": false,
+
+    // 7. Retry Configuration
+    // Maximum number of retry attempts if this task fails.
+    // Use 0 to disable retries, or a positive integer for retry attempts
+    "max_retries": 0
+  }
+]

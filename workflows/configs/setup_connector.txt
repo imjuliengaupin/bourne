@@ -1,44 +1,45 @@
 {
   // =========================
-  // REQUIRED CONFIGURATION
+  // REQUIRED CONFIGURATIONS
   // =========================
 
-  // 1. Source Data Connector
-  // Choose a supported source data connector.
-  // Supported values: local_file
+  // 1. Data Source Connector
+  // Choose your data source connector type.
+  // Supported connectors: local_file
   "source_type": "",
 
   // =========================
-  // OPTIONAL CONFIGURATION
+  // OPTIONAL CONFIGURATIONS
   // =========================
 
-  // 1. Source Data Path
-  // Path to your local data file or directory.
-  // Applies to: local_file
-  // Supported formats: json
+  // 2. Source Data Path
+  // Path to your input data file or directory.
+  // Supported formats: json, ndjson
+  // Required when: source_type = "local_file"
   "source_path": "",
 
-    // 2. Expected Data Schema
-  // Define the expected schema for your data.
-  // Connects to Pydantic Record objects in /bourne/schemas/.
-  // Keys should be column names in UPPERCASE.
-  // Values should be valid Python data types (see Python documentation).
+  // 3. Expected Data Schema
+  // Define the expected schema for input validation.
+  // Maps to Pydantic Record objects in /schemas/
+  // Keys should match your data fields (case-sensitive).
+  // Values should be valid Python data types.
   // Example: "expected_schema": {
-  //   "COLUMN_NAME": "str",
-  //   "COLUMN_NAME": "int",
+  //   "ID": "int",
+  //   "Name": "str",
+  //   "Timestamp": "str",
   //   ...
   // }
   "expected_schema": {},
 
-  // 3. Data Transformation Mode
-  // Choose a transformation to apply to your data.
-  // Supported values: lowercase_keys
-  // Supported formats: json
+  // 4. Data Transformation Mode
+  // Choose which transformation to apply during processing.
+  // Supported modes: lowercase_keys
+  // Leave empty to skip transformation
   "transform_mode": "",
 
-  // 4. Output Path for Transformed Data
-  // Path to save transformed data.
-  // Applies to: local_file
-  // Supported formats: json
+  // 5. Output Path for Processed Data
+  // Path where transformed/processed data will be saved.
+  // Supported formats: json, ndjson
+  // Required when: transform_mode is specified
   "transform_output_path": ""
 }
