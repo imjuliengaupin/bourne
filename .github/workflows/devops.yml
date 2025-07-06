@@ -3,7 +3,7 @@ run-name: CI/CD pipeline initiated
 
 on:
   push:
-    branches: [SIT]
+    branches: [SIT, PROD]
   pull_request:
     branches: [PROD]
 
