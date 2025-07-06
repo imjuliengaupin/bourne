@@ -1,35 +1,35 @@
 [
   {
+    "task_name": "DemoIngest",
     "agent_name": "DataIngestionAgent",
     "agent_method_name": "ingest_data",
-    "task_name": "DemoIngest",
     "depends_on": [],
     "requires_input": false,
     "produces_output": true,
     "max_retries": 2
   },
   {
+    "task_name": "DemoValidate",
     "agent_name": "DataValidationAgent",
     "agent_method_name": "validate_data",
-    "task_name": "DemoValidate",
     "depends_on": ["DemoIngest"],
     "requires_input": true,
     "produces_output": false,
     "max_retries": 2
   },
   {
+    "task_name": "DemoTransform",
     "agent_name": "DataTransformationAgent",
     "agent_method_name": "transform_data",
-    "task_name": "DemoTransform",
     "depends_on": ["DemoValidate"],
     "requires_input": true,
     "produces_output": true,
     "max_retries": 2
   },
   {
+    "task_name": "DemoSave",
     "agent_name": "DataStorageAgent",
     "agent_method_name": "save_data",
-    "task_name": "DemoSave",
     "depends_on": ["DemoTransform"],
     "requires_input": true,
     "produces_output": false,

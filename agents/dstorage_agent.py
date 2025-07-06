@@ -16,13 +16,13 @@ class DataStorageAgent(BaseAgent):
 
     def __init__(self, logger: Logger, dashboard: Dashboard, dashboard_state: Live, workflow_plan_conf: WorkflowConfigManager, workflow_state: WorkflowState) -> None:
         super().__init__(logger, dashboard, dashboard_state, workflow_plan_conf, workflow_state)
-        self.output_path: str = self.workflow_plan_conf.get("transform_output_path")
+
+        output_path_config = self.workflow_plan_conf.get("transform_output_path")
+        self.output_path: str = output_path_config if output_path_config else "data/data_transformed.txt"
         self.output_dir: str = os.path.dirname(self.output_path)
 
-        if not self.output_path:
+        if not output_path_config:
             self.log_and_update_dashboard("⚠️ WARNING:  Configuration 'transform_output_path' is not specified. Setting to default.")
-            self.output_path: str = "data/data_transformed.txt"
-            self.output_dir: str = os.path.dirname(self.output_path)
 
     def save_data(self, data: List[Dict[str, Any]]) -> bool:
         if not data:

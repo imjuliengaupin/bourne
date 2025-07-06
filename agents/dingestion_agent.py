@@ -18,7 +18,7 @@ class DataIngestionAgent(BaseAgent):
     def __init__(self, logger: Logger, dashboard: Dashboard, dashboard_state: Live, workflow_plan_conf: WorkflowConfigManager, workflow_state: WorkflowState) -> None:
         super().__init__(logger, dashboard, dashboard_state, workflow_plan_conf, workflow_state)
 
-    def ingest_data(self) -> Optional[Dict[str, Any]]:
+    def ingest_data(self) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
         source_type: Optional[str] = self.workflow_plan_conf.get("source_type")
         source_path: Optional[str] = self.workflow_plan_conf.get("source_path")
 
@@ -43,13 +43,13 @@ class DataIngestionAgent(BaseAgent):
             self.log_and_update_dashboard(f"❌ FAILURE: Error occurred in {self.get_caller_method()}\n{e}")
             return None
 
-    def ingesting_local_file(self, source_type: str, source_path: str) -> Optional[Dict[str, Any]]:
+    def ingesting_local_file(self, source_type: str, source_path: str) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
         try:
             if not os.path.exists(source_path):
                 self.log_and_update_dashboard(f"❌ FAILURE: '{source_type}' not found under {source_path}.")
                 return None
 
-            records: Union[Dict[str, Any], List[Dict[str, Any]]] = None
+            records: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None
 
             with open(source_path, 'r', encoding="utf-8") as file:
                 if source_path.endswith(".ndjson"):

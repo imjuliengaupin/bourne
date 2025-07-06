@@ -1,17 +1,14 @@
 
-from typing import List, Optional, TypedDict
+from typing import List, NotRequired, TypedDict
 
 
 class WorkflowTask(TypedDict):
-
+    task_name: str
     agent_name: str
     agent_method_name: str
-    task_name: str
-    depends_on: Optional[List[str]]
-    requires_input: Optional[bool]
-    produces_output: Optional[bool]
-    max_retries: Optional[int]
-    retries_left: Optional[int]
-    task_status: Optional[str]
-
-    def __init__(self) -> None: ...
+    depends_on: List[str]
+    requires_input: bool
+    produces_output: bool
+    max_retries: int
+    retries_left: NotRequired[int]
+    task_status: NotRequired[str]

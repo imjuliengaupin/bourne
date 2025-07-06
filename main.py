@@ -22,12 +22,14 @@ def main() -> None:
     dashboard: Dashboard = Dashboard(logger.max_logs)
 
     workflow_plan: Optional[List[WorkflowTask]] = load_json("workflows/demo.json")
-    workflow_plan_conf: WorkflowConfigManager = WorkflowConfigManager(load_json("workflows/configs/demo.json"))
+    source_data_connector: Optional[Dict[str, Any]] = load_json("workflows/configs/demo.json")
+
+    workflow_plan_conf: WorkflowConfigManager = WorkflowConfigManager(source_data_connector if source_data_connector else {})
     workflow_state: WorkflowState = WorkflowState(logger)
 
     with Live(dashboard.render(workflow_state.tasks, logger.get_logs()), refresh_per_second=4, console=dashboard.console) as dashboard_state:
-        if workflow_plan is None or workflow_plan_conf is None:
-            logger.log("Main", "❌ Error during attempted load of the workflow plan and/or workflow plan configurations. Exiting...")
+        if workflow_plan is None or source_data_connector is None:
+            logger.log("Main", "❌ Error during attempted load of the workflow plan and/or source data connector configurations. Exiting...")
             dashboard_state.update(dashboard.render([], logger.get_logs()))
             return
 
@@ -36,7 +38,7 @@ def main() -> None:
             dashboard_state.update(dashboard.render([], logger.get_logs()))
             return
 
-        def unpack_agent() -> tuple:
+        def unpack_agent() -> tuple[Logger, Dashboard, Live, WorkflowConfigManager, WorkflowState]:
             return (logger, dashboard, dashboard_state, workflow_plan_conf, workflow_state)
 
         agents: Dict[str, BaseAgent] = {

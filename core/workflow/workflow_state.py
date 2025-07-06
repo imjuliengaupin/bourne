@@ -1,7 +1,6 @@
 
 from typing import Any, Dict, List, Optional
 
-from core import constants
 from core.logger import Logger
 from core.workflow.workflow_task import WorkflowTask
 
@@ -24,6 +23,6 @@ class WorkflowState:
 
     def update_task_status(self, task_name: str, status: str) -> None:
         for task in self.tasks:
-            if task.get(constants.TASK_NAME) == task_name:
-                task[constants.TASK_STATUS] = status
+            if task.get("task_name") == task_name:
+                task["task_status"] = status
                 break

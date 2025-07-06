@@ -1,7 +1,7 @@
 
-from typing import ClassVar, List
+from typing import List
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
 class Record(BaseModel):
@@ -9,9 +9,9 @@ class Record(BaseModel):
     name: str = Field(alias='Name')
     timestamp: str = Field(alias='Timestamp')
 
-    model_config: ClassVar[dict] = {
-        "populate_by_name": True,
-    }
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class RecordList(RootModel[List[Record]]):

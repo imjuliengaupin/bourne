@@ -2,7 +2,7 @@
 import inspect
 import time
 from types import FrameType
-from typing import List
+from typing import List, Optional
 
 
 class Logger:
@@ -19,7 +19,7 @@ class Logger:
         return type(self).__name__
 
     def get_caller_method(self) -> str:
-        frame: FrameType = inspect.currentframe()
+        frame: Optional[FrameType] = inspect.currentframe()
 
         if frame is not None and frame.f_back is not None:
             return frame.f_back.f_code.co_name + "()"

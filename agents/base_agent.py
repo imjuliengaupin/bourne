@@ -3,6 +3,7 @@ import inspect
 import time
 from abc import ABC
 from types import FrameType
+from typing import Optional
 
 from rich.live import Live
 
@@ -26,7 +27,7 @@ class BaseAgent(ABC):
         return type(self).__name__
 
     def get_caller_method(self) -> str:
-        frame: FrameType = inspect.currentframe()
+        frame: Optional[FrameType] = inspect.currentframe()
 
         if frame is not None and frame.f_back is not None:
             return frame.f_back.f_code.co_name + "()"

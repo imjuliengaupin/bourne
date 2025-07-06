@@ -15,11 +15,11 @@ from core.workflow.workflow_task import WorkflowTask
 class Dashboard:
 
     COLUMN_DEFINITIONS: List[Tuple[str, str]] = [
-        ("TASK NAME", constants.TASK_NAME),
-        ("AGENT", constants.AGENT_NAME),
-        ("METHOD TO RUN", constants.AGENT_METHOD_NAME),
-        ("STATUS", constants.TASK_STATUS),
-        ("RETRIES LEFT", constants.RETRIES_LEFT),
+        ("TASK NAME", "task_name"),
+        ("AGENT", "agent_name"),
+        ("METHOD TO RUN", "agent_method_name"),
+        ("STATUS", "task_status"),
+        ("RETRIES LEFT", "retries_left"),
     ]
 
     DEFAULT_STYLE: Style = Style(color="bright_black")
@@ -80,13 +80,13 @@ class Dashboard:
 
         for after_key in after_keys:
             if after_key not in used_after_keys:
-                after_value: str = data_after_transform.get(after_key, "")
+                after_value_new: str = data_after_transform.get(after_key, "")
 
                 table.add_row(
                     "",
                     "",
                     Text(str(after_key), style="bold green"),
-                    Text(str(after_value), style="bold green")
+                    Text(str(after_value_new), style="bold green")
                 )
 
         return Panel(
@@ -119,10 +119,22 @@ class Dashboard:
             row_values: list = []
 
             for _, key in self.COLUMN_DEFINITIONS:
-                value: str = str(task.get(key))
+                # Convert constant to actual string for TypedDict access
+                if key == "task_name":
+                    value: str = str(task.get("task_name", ""))
+                elif key == "agent_name":
+                    value = str(task.get("agent_name", ""))
+                elif key == "agent_method_name":
+                    value = str(task.get("agent_method_name", ""))
+                elif key == "task_status":
+                    value = str(task.get("task_status", ""))
+                elif key == "retries_left":
+                    value = str(task.get("retries_left", ""))
+                else:
+                    value = ""
 
-                if key == constants.TASK_STATUS:
-                    style: Style = self.get_status_style(value)
+                if key == "task_status":
+                    style: Style = self.get_status_style(task.get("task_status"))
                     row_values.append(Text(value, style=style))
                 else:
                     row_values.append(Text(value))

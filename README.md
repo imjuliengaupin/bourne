@@ -10,15 +10,15 @@
 [![CI/CD](https://github.com/imjuliengaupin/bourne/actions/workflows/devops.yml/badge.svg?branch=PROD)](https://github.com/imjuliengaupin/bourne/actions/workflows/devops.yml)
 [![Coverage](https://coveralls.io/repos/github/imjuliengaupin/bourne/badge.svg?branch=PROD)](https://coveralls.io/github/imjuliengaupin/bourne?branch=PROD)
 
-<a href="#demo">View Demo</a>
+<a href="#-demo">View Demo</a>
 ·
-<a href="#cicd">View Docs</a>
+<a href="https://github.com/imjuliengaupin/bourne/actions">View Docs</a>
 ·
-<a href="#️architecture">View Architecture</a>
+<a href="#️-architecture">View Architecture</a>
 
 </div>
 
-## :gear: Features
+## :gear: <a name="features">Features</a>
 
 - [x] **Multi-agent orchestration**: Modular agents for data ingestion, validation, transformation, and storage.
 - [x] **Extensible agent framework**: Easily add new agent types or transformation modes.
@@ -37,7 +37,7 @@ _See [open issues](https://github.com/imjuliengaupin/bourne/issues) for a full l
     (<a href="#readme-top">back to top</a>)
 </p>
 
-## :repeat: <a name="ci-cd">CI/CD</a>
+## :repeat: <a name="cicd">CI/CD</a>
 
 - [x] **Automated builds**: Push and pull requests trigger a [GitHub Actions](https://docs.github.com/en/actions/using-workflows) workflow
 - [x] **Code linting**: Enforced with `pylint`
@@ -54,7 +54,7 @@ _See the latest [workflow runs and artifacts](https://github.com/imjuliengaupin/
     (<a href="#readme-top">back to top</a>)
 </p>
 
-## :building_construction: Architecture
+## :building_construction: <a name="architecture">Architecture</a>
 
 [![Open in Eraser](https://img.shields.io/badge/Open%20in-Eraser-blue?logo=eraser&style=for-the-badge)](https://app.eraser.io/workspace/LDgZLTRhjaVsKpyiZU0B)
 
@@ -62,7 +62,7 @@ _See the latest [workflow runs and artifacts](https://github.com/imjuliengaupin/
     (<a href="#readme-top">back to top</a>)
 </p>
 
-## :computer: Demo
+## :computer: <a name="demo">Demo</a>
 
 Live rendering of agent workflow progress and logs in a terminal dashboard.
 <img src="./demo/images/demo.gif" width="700">
