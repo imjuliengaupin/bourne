@@ -1,0 +1,11 @@
+[
+  {
+    "task_name": "TestTask1",
+    "agent_name": "NonExistentAgent",
+    "agent_method_name": "some_method",
+    "depends_on": [],
+    "requires_input": false,
+    "produces_output": false,
+    "max_retries": 1
+  }
+]

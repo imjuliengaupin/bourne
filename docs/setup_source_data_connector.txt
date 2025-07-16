@@ -8,10 +8,6 @@
   // Supported connectors: local_file
   "source_type": "",
 
-  // =========================
-  // OPTIONAL CONFIGURATIONS
-  // =========================
-
   // 2. Source Data Path
   // Path to your input data file or directory.
   // Supported formats: json, ndjson
@@ -30,6 +26,10 @@
   //   ...
   // }
   "expected_schema": {},
+
+  // =========================
+  // OPTIONAL CONFIGURATIONS
+  // =========================
 
   // 4. Data Transformation Mode
   // Choose which transformation to apply during processing.

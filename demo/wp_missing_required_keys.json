@@ -1,0 +1,10 @@
+[
+  {
+    "task_name": "TestTask1",
+    "agent_name": "DataIngestionAgent"
+  },
+  {
+    "agent_name": "DataValidationAgent",
+    "agent_method_name": "validate_data"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "task_name": "TaskA",
+    "agent_name": "DataIngestionAgent",
+    "agent_method_name": "ingest_data",
+    "depends_on": ["TaskB"],
+    "requires_input": false,
+    "produces_output": true,
+    "max_retries": 1
+  },
+  {
+    "task_name": "TaskB",
+    "agent_name": "DataValidationAgent",
+    "agent_method_name": "validate_data",
+    "depends_on": ["TaskA"],
+    "requires_input": true,
+    "produces_output": false,
+    "max_retries": 1
+  }
+]

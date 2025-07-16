@@ -7,8 +7,8 @@
 
 <h3 align="center">Bourne</h3>
 
-[![CI/CD](https://github.com/imjuliengaupin/bourne/actions/workflows/devops.yml/badge.svg?branch=PROD)](https://github.com/imjuliengaupin/bourne/actions/workflows/devops.yml)
-[![Coverage](https://coveralls.io/repos/github/imjuliengaupin/bourne/badge.svg?branch=PROD)](https://coveralls.io/github/imjuliengaupin/bourne?branch=PROD)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/imjuliengaupin/bourne/devops.yml?branch=PROD&style=for-the-badge&logo=github&label=CI/CD)](https://github.com/imjuliengaupin/bourne/actions/workflows/devops.yml)
+[![Coverage](https://img.shields.io/coveralls/github/imjuliengaupin/bourne/PROD?style=for-the-badge&logo=coveralls&label=COVERAGE)](https://coveralls.io/github/imjuliengaupin/bourne?branch=PROD)
 
 <a href="#-demo">View Demo</a>
 ·
@@ -43,7 +43,7 @@ _See [open issues](https://github.com/imjuliengaupin/bourne/issues) for a full l
 - [x] **Code linting**: Enforced with `pylint`
 - [x] **Static type checking**: Enforced with `mypy`
 - [x] **Unit testing**: Automated with `pytest`
-- [x] **Code coverage**: Measured with `pytest-cov` and reported to [Coveralls](https://coveralls.io/)
+- [x] **Code coverage**: Measured with `pytest-cov` and reported to [Coveralls](https://coveralls.io/github/imjuliengaupin/bourne)
 - [x] **Documentation generation**: Automated with `pdoc3`
 
 <br />

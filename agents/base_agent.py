@@ -5,23 +5,14 @@ from abc import ABC
 from types import FrameType
 from typing import Optional
 
-from rich.live import Live
-
-from core.dashboard import Dashboard
-from core.logger import Logger
-from core.workflow.workflow_config_manager import WorkflowConfigManager
-from core.workflow.workflow_state import WorkflowState
+from agents.dataclasses.agent_context import AgentContext
 
 
 class BaseAgent(ABC):
-    # NOTE: Create abstract methods using the @abstractmethod decorator
+    # NOTE Create abstract methods using the @abstractmethod decorator
 
-    def __init__(self, logger: Logger, dashboard: Dashboard, dashboard_state: Live, workflow_plan_conf: WorkflowConfigManager, workflow_state: WorkflowState) -> None:
-        self.logger: Logger = logger
-        self.dashboard: Dashboard = dashboard
-        self.dashboard_state: Live = dashboard_state
-        self.workflow_plan_conf: WorkflowConfigManager = workflow_plan_conf
-        self.workflow_state: WorkflowState = workflow_state
+    def __init__(self, agent_context: AgentContext) -> None:
+        self.agent_context: AgentContext = agent_context
 
     def get_class_label(self) -> str:
         return type(self).__name__
@@ -34,14 +25,16 @@ class BaseAgent(ABC):
 
         return "unknown_caller_method()"
 
-    def log_and_update_dashboard(self, message: str, data_before_transform=None, data_after_transform=None) -> None:
-        self.logger.log(self.get_class_label(), message)
+    def log_and_update_dashboard(self, message: Optional[str] = None, data_before_transformation=None, data_after_transformation=None) -> None:
+        if message:
+            self.agent_context.logger.log(self.get_class_label(), message)
 
-        self.dashboard_state.update(self.dashboard.render(
-            self.workflow_state.get_tasks(),
-            self.logger.get_logs(),
-            data_before_transform=data_before_transform,
-            data_after_transform=data_after_transform
-        ))
+        if hasattr(self.agent_context, 'dashboard_state') and self.agent_context.dashboard_state:
+            self.agent_context.dashboard_state.update(self.agent_context.dashboard.render(
+                self.agent_context.workflow_plan_state.get_workflow_tasks(),
+                self.agent_context.logger.get_logs(),
+                data_before_transformation=data_before_transformation,
+                data_after_transformation=data_after_transformation
+            ))
 
-        time.sleep(0.5)
+            time.sleep(0.5)

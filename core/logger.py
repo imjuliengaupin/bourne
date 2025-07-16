@@ -8,11 +8,7 @@ from typing import List, Optional
 class Logger:
 
     def __init__(self, max_logs: int) -> None:
-        if max_logs < 0:
-            print(f"[{self.get_timestamp()}] [{self.get_class_label()}] ⚠️ WARNING: The 'max_logs' parameter cannot be negative. Setting to 0.")
-            max_logs = 0
-
-        self.max_logs: int = max_logs
+        self.max_logs: int = max(0, max_logs)
         self.logs: List[str] = []
 
     def get_class_label(self) -> str:
@@ -34,10 +30,15 @@ class Logger:
 
     def log(self, class_label: str, message: str) -> None:
         try:
-            self.logs.append(f"[{self.get_timestamp()}] [{class_label}] {message}")
+            formatted_message: str = f"[{self.get_timestamp()}] [{class_label}] {message}"
 
-            if self.max_logs > 0 and len(self.logs) > self.max_logs:
-                self.logs.pop(0)
+            self.logs.append(formatted_message)
+
+            if self.max_logs > 0:
+                excess_logs: int = len(self.logs) - self.max_logs
+
+                if excess_logs > 0:
+                    self.logs = self.logs[excess_logs:]
 
         except Exception as e:
-            print(f"[{self.get_timestamp()}] [{self.get_class_label()}] ❌ FAILURE: Error occurred in {self.get_caller_method()}\n{e}")
+            print(f"[{self.get_timestamp()}] [{self.get_class_label()}] ❌ FAILURE: Error occurred in {self.get_caller_method()}.\n{e}")

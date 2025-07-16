@@ -1,0 +1,9 @@
+{
+  "source_type": "local_file",
+  "source_path": "data/demo/demo.json",
+  "expected_schema": {
+    "ID": "integer",
+    "Name": "string",
+    "Timestamp": "datetime"
+  }
+}

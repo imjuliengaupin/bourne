@@ -1,6 +1,9 @@
 
-# Data source connector constants
+# Supported source data connector constants
 LOCAL_FILE_TYPE: str = "local_file"
+
+# Supported data transformation constants
+LOWERCASE_KEYS: str = "lowercase_keys"
 
 # Status constants
 STATUS_PENDING: str = "PENDING"
