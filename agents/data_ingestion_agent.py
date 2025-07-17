@@ -22,7 +22,7 @@ class DataIngestionAgent(BaseAgent):
         self.log_and_update_dashboard(f"▶️ START: Ingesting data from '{self.source_type}' source: {self.source_path}.")
 
         try:
-            if self.source_type == constants.LOCAL_FILE_TYPE:
+            if self.source_type == constants.LOCAL_FILE_TYPE and self.source_path is not None:
                 return self.ingest_local_file(self.source_type, self.source_path)
             else:
                 self.log_and_update_dashboard(f"❌ FAILURE: Unknown source data connector specified: '{self.source_type}'. Supported source data connectors: {self.supported_connectors}.")

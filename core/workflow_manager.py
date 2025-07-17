@@ -1,7 +1,7 @@
 
 import inspect
 from types import FrameType
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from core import constants
 from core.logger import Logger
@@ -63,7 +63,7 @@ class WorkflowManager:
                 workflow_step["retries_left"] = workflow_step.get("max_retries")
                 workflow_step["task_status"] = constants.STATUS_PENDING
 
-                workflow_task: WorkflowTask = WorkflowTask(**workflow_step)
+                workflow_task: WorkflowTask = cast(WorkflowTask, workflow_step)
 
                 validated_workflow_tasks.append(workflow_task)
 

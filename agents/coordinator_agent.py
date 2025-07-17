@@ -67,13 +67,13 @@ class CoordinatorAgent(BaseAgent):
             self.log_and_update_dashboard(f"❌ FAILURE: Error occurred in {self.get_caller_method()}.\n{e}")
 
     def report_final_status(self) -> None:
-        final_statuses: List[str] = [task.get("task_status") for task in self.agent_context.workflow_plan_state.workflow_tasks]
+        final_statuses: List[str] = [str(task.get("task_status")) for task in self.agent_context.workflow_plan_state.workflow_tasks]
 
         if all(status == constants.STATUS_SUCCESS for status in final_statuses):
             self.log_and_update_dashboard("🎉 FINISHED: No failed or unfinished tasks.")
         else:
-            failed_tasks: List[str] = [task.get("task_name") for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") == constants.STATUS_FAILED]
-            unfinished_tasks: List[str] = [task.get("task_name") for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") in [constants.STATUS_PENDING, constants.STATUS_RETRIED, constants.STATUS_IN_PROGRESS]]
+            failed_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") == constants.STATUS_FAILED]
+            unfinished_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") in [constants.STATUS_PENDING, constants.STATUS_RETRIED, constants.STATUS_IN_PROGRESS]]
 
             if failed_tasks:
                 self.log_and_update_dashboard(f"⚠️ WARNING: Failed tasks: {failed_tasks}.")
@@ -83,7 +83,7 @@ class CoordinatorAgent(BaseAgent):
 
     def check_task_dependencies(self, task: WorkflowTask) -> bool:
         try:
-            depends_on_list: List[str] = task.get("depends_on")
+            depends_on_list: List[str] = task.get("depends_on") or []
 
             if not isinstance(depends_on_list, list):
                 self.log_and_update_dashboard(f"⚠️ WARNING: Invalid 'depends_on' format for task '{task.get('task_name')}': Expected list, but got {type(depends_on_list)}. Assuming no dependencies and proceeding.")
@@ -140,7 +140,7 @@ class CoordinatorAgent(BaseAgent):
             self.log_and_update_dashboard(f"❌ FAILURE: Agent '{agent_name}' not found for task '{task_name}'. Available agents: {list(self.agents.keys())}.")
             return None, False
 
-        agent_method: Optional[Callable] = None
+        agent_method: Optional[Callable[..., Any]] = None
 
         try:
             if agent_method_name:
@@ -158,7 +158,7 @@ class CoordinatorAgent(BaseAgent):
         success: bool = False
 
         try:
-            requires_input: bool = task.get("requires_input")
+            requires_input: bool = task.get("requires_input") or False
 
             if requires_input:
                 if shared_input_data is None:
@@ -186,13 +186,13 @@ class CoordinatorAgent(BaseAgent):
             if success and task_name:
                 self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, constants.STATUS_SUCCESS)
 
-                produces_output: bool = task.get("produces_output")
+                produces_output: bool = task.get("produces_output") or False
 
                 if produces_output:
                     new_shared_input_data = result
                     self.agent_context.workflow_plan_state.outputs_by_workflow_task[task_name] = result
             else:
-                retries_left: int = task.get("retries_left")
+                retries_left: int = task.get("retries_left") or 0
 
                 if retries_left > 0:
                     task["retries_left"] = retries_left - 1

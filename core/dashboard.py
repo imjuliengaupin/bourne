@@ -1,5 +1,5 @@
 
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from rich.columns import Columns
 from rich.console import Console
@@ -37,16 +37,16 @@ class Dashboard:
         self.console: Console = Console()
         self.max_logs: int = logger.max_logs
 
-    def render(self, tasks: List[WorkflowTask], logs: List[str], data_before_transformation: Optional[dict] = None, data_after_transformation: Optional[dict] = None) -> Columns:
-        panels: list = [self.create_tasks_table(tasks), self.create_logs_panel(logs)]
+    def render(self, tasks: List[WorkflowTask], logs: List[str], data_before_transformation: Optional[Dict[str, Any]] = None, data_after_transformation: Optional[Dict[str, Any]] = None) -> Columns:
+        panels: List[Union[Table, Panel]] = [self.create_tasks_table(tasks), self.create_logs_panel(logs)]
 
         if data_before_transformation is not None and data_after_transformation is not None:
             panels.append(self.create_data_preview_panel(data_before_transformation, data_after_transformation))
 
         return Columns(panels)
 
-    def get_status_style(self, status: Optional[str]) -> Style:
-        return self.STATUS_STYLES.get(str(status))
+    def get_status_style(self, status: Optional[str]) -> Optional[Style]:
+        return self.STATUS_STYLES.get(str(status)) if status else None
 
     def create_tasks_table(self, workflow_tasks: List[WorkflowTask]) -> Table:
         tasks_table: Table = Table(
@@ -59,25 +59,26 @@ class Dashboard:
             tasks_table.add_column(header, justify="left", no_wrap=True)
 
         for task in workflow_tasks:
-            row_values: list = []
+            row_values: List[Text] = []
+            value: str = ""
 
             for _, key in self.COLUMN_DEFINITIONS:
                 if key == "task_name":
-                    value: str = str(task.get("task_name"))
+                    value = str(task.get("task_name"))
                 elif key == "agent_name":
-                    value: str = str(task.get("agent_name"))
+                    value = str(task.get("agent_name"))
                 elif key == "agent_method_name":
-                    value: str = str(task.get("agent_method_name"))
+                    value = str(task.get("agent_method_name"))
                 elif key == "task_status":
-                    value: str = str(task.get("task_status"))
+                    value = str(task.get("task_status"))
                 elif key == "retries_left":
-                    value: str = str(task.get("retries_left"))
+                    value = str(task.get("retries_left"))
                 else:
-                    value: str = ""
+                    value = ""
 
                 if key == "task_status":
-                    style: Style = self.get_status_style(task.get("task_status"))
-                    row_values.append(Text(value, style=style))
+                    style: Optional[Style] = self.get_status_style(task.get("task_status"))
+                    row_values.append(Text(value, style=style if style else Style()))
                 else:
                     row_values.append(Text(value))
 
@@ -98,7 +99,7 @@ class Dashboard:
             height=height,
         )
 
-    def create_data_preview_panel(self, data_before_transformation: dict, data_after_transformation: dict) -> Panel:
+    def create_data_preview_panel(self, data_before_transformation: Dict[str, Any], data_after_transformation: Dict[str, Any]) -> Panel:
         table: Table = Table(
             show_header=True,
             header_style="",
@@ -110,39 +111,40 @@ class Dashboard:
         table.add_column("Data Keys (After)")
         table.add_column("Data Values (After)")
 
-        keys_before_transformation: list = list(data_before_transformation.keys())
-        keys_after_transformation: list = list(data_after_transformation.keys())
-        used_keys_after_transformation: set = set()
+        keys_before_transformation: List[str] = list(data_before_transformation.keys())
+        keys_after_transformation: List[str] = list(data_after_transformation.keys())
+        used_keys_after_transformation: Set[str] = set()
+        key_style: str = "bold green"
+        value_style: str = "bold green"
 
-        for key in keys_before_transformation:
-            matching_key: str | None = self.find_matching_key_after_transform(key, keys_after_transformation)
+        for key_before_transformation in keys_before_transformation:
+            matching_key: str | None = self.find_matching_key_after_transform(key_before_transformation, keys_after_transformation)
 
-            value_before_transformation: str = data_before_transformation.get(key) if key else ""
-            value_after_transformation: str = data_after_transformation.get(matching_key) if matching_key else ""
+            if matching_key is not None:
+                used_keys_after_transformation.add(matching_key)
 
-            used_keys_after_transformation.add(matching_key)
+            value_before_transformation: str = str(data_before_transformation.get(key_before_transformation)) if key_before_transformation else ""
+            value_after_transformation: str = str(data_after_transformation.get(matching_key)) if matching_key else ""
 
-            key_style: str = "bold green" if matching_key and key != matching_key else ""
-            value_style: str = "bold green" if str(value_before_transformation) != str(value_after_transformation) else "bright_black"
+            key_style = key_style if matching_key and key_before_transformation != matching_key else ""
+            value_style = value_style if str(value_before_transformation) != str(value_after_transformation) else "bright_black"
 
             table.add_row(
-                Text(str(key), style="bright_black"),
+                Text(str(key_before_transformation), style="bright_black"),
                 Text(str(value_before_transformation), style="bright_black"),
                 Text(str(matching_key) if matching_key else "", style=key_style),
                 Text(str(value_after_transformation), style=value_style)
             )
 
-        for key in keys_after_transformation:
-            if key not in used_keys_after_transformation:
-                value_after_transformation: str = data_after_transformation.get(key)
-                key_style: str = "bold green"
-                value_style: str = "bold green"
+        for final_key_after_transformation in keys_after_transformation:
+            if final_key_after_transformation not in used_keys_after_transformation:
+                final_value_after_transformation: str = str(data_after_transformation.get(final_key_after_transformation))
 
                 table.add_row(
                     "",
                     "",
-                    Text(str(key), style=key_style),
-                    Text(str(value_after_transformation), style=value_style)
+                    Text(str(final_key_after_transformation), style=key_style),
+                    Text(str(final_value_after_transformation), style=value_style)
                 )
 
         return Panel(
@@ -151,7 +153,7 @@ class Dashboard:
             border_style="bold blue"
         )
 
-    def find_matching_key_after_transform(self, key_before_transformation: str, keys_after_transformation: list) -> Optional[str]:
+    def find_matching_key_after_transform(self, key_before_transformation: str, keys_after_transformation: List[str]) -> Optional[str]:
         for key in keys_after_transformation:
             if key.lower() == key_before_transformation.lower():
                 return key

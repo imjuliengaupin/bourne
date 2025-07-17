@@ -23,21 +23,23 @@ def main(workflow: str, connector: str) -> None:
     logger: Logger = Logger(max_logs=10)
     dashboard: Dashboard = Dashboard(logger)
 
-    workflow_plan_json: Optional[List[Dict[str, Any]]] = load_json(logger, Path(workflow))
+    workflow_plan_json: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = load_json(logger, Path(workflow))
+    workflow_plan: Optional[List[Dict[str, Any]]] = workflow_plan_json if isinstance(workflow_plan_json, list) else None
     workflow_plan_state: WorkflowManager = WorkflowManager(logger)
 
-    source_data_connector_json: Optional[Dict[str, Any]] = load_json(logger, Path(connector))
-    source_data_connector_state: ConnectorManager = ConnectorManager(logger, source_data_connector_json)
+    source_data_connector_json: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = load_json(logger, Path(connector))
+    source_data_connector: Optional[Dict[str, Any]] = source_data_connector_json if isinstance(source_data_connector_json, dict) else None
+    source_data_connector_state: ConnectorManager = ConnectorManager(logger, source_data_connector)
 
     with Live(dashboard.render(workflow_plan_state.get_workflow_tasks(), logger.get_logs()), refresh_per_second=3.0, console=dashboard.console) as dashboard_state:
         agent_context: AgentContext = AgentContext(logger, dashboard, dashboard_state, workflow_plan_state, source_data_connector_state)
 
-        if not is_workflow_ready(agent_context, workflow_plan_json, source_data_connector_json):
+        if not is_workflow_ready(agent_context, workflow_plan, source_data_connector):
             return
-        else:
-            agents: Dict[str, BaseAgent] = setup_agents(agent_context)
-            coordinator_agent: CoordinatorAgent = CoordinatorAgent(agent_context, agents)
-            coordinator_agent.run_workflow()
+
+        agents: Dict[str, BaseAgent] = setup_agents(agent_context)
+        coordinator_agent: CoordinatorAgent = CoordinatorAgent(agent_context, agents)
+        coordinator_agent.run_workflow()
 
 
 def setup_agents(agent_context: AgentContext) -> Dict[str, BaseAgent]:
@@ -49,12 +51,12 @@ def setup_agents(agent_context: AgentContext) -> Dict[str, BaseAgent]:
     }
 
 
-def is_workflow_ready(agent_context: AgentContext, workflow_plan_json: Optional[List[Dict[str, Any]]], source_data_connector_json: Optional[Dict[str, Any]]) -> bool:
-    if workflow_plan_json is None or source_data_connector_json is None:
+def is_workflow_ready(agent_context: AgentContext, workflow_plan: Optional[List[Dict[str, Any]]], source_data_connector: Optional[Dict[str, Any]]) -> bool:
+    if workflow_plan is None or source_data_connector is None:
         agent_context.dashboard_state.update(agent_context.dashboard.render([], agent_context.logger.get_logs()))
         return False
 
-    if not agent_context.workflow_plan_state.validate_keys_and_load_workflow_tasks(workflow_plan_json):
+    if not agent_context.workflow_plan_state.validate_keys_and_load_workflow_tasks(workflow_plan):
         agent_context.dashboard_state.update(agent_context.dashboard.render([], agent_context.logger.get_logs()))
         return False
 
@@ -68,7 +70,8 @@ def is_workflow_ready(agent_context: AgentContext, workflow_plan_json: Optional[
 def load_json(logger: Logger, path: Union[str, Path]) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
     try:
         with open(path, "r", encoding="utf-8") as file:
-            return json.load(file)
+            json_content: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = json.load(file)
+            return json_content
 
     except FileNotFoundError as e:
         logger.log("Main", f"❌ FAILURE: Configuration file not found {path}: {e}. Exiting...")

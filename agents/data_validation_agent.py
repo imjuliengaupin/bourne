@@ -1,7 +1,7 @@
 
 from typing import Any, Dict, List, Optional, Type
 
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, TypeAdapter
 
 from agents.base_agent import BaseAgent
 from agents.dataclasses.agent_context import AgentContext
@@ -16,14 +16,14 @@ class DataValidationAgent(BaseAgent):
         self.expected_schema: Dict[str, Type[Any]] = {}
         self.pydantic_model: Optional[Type[BaseModel]] = None
 
-        raw_expected_schema: Dict[str, str] = self.agent_context.source_data_connector_state.get("expected_schema")
+        raw_expected_schema: Dict[str, str] = self.agent_context.source_data_connector_state.get("expected_schema") or {}
 
         try:
             self.pydantic_model = SchemaGenerator.create_record_model(raw_expected_schema)
-            self.log_and_update_dashboard(f"ℹ️ INFO: Created dynamic schema with fields: {list(raw_expected_schema.keys())}")
+            self.log_and_update_dashboard(f"ℹ️ INFO: Created dynamic Pydantic schema with fields: {list(raw_expected_schema.keys())}.")
 
         except Exception as e:
-            self.log_and_update_dashboard(f"❌ FAILURE: Failed to create dynamic schema: {e}")
+            self.log_and_update_dashboard(f"⚠️ WARNING: Failed to create dynamic Pydantic schema, using fallback schema.\n{e}")
 
         # Keep existing type mapping for backwards compatibility
         for key, python_type_name in raw_expected_schema.items():
@@ -39,11 +39,14 @@ class DataValidationAgent(BaseAgent):
             self.log_and_update_dashboard("⚠️ WARNING: No data provided.")
             return False
 
-        if self.pydantic_model:
+        if self.pydantic_model is not None:
             try:
                 self.log_and_update_dashboard(f"▶️ START: Attempting to validate {len(shared_input_data)} records using dynamic Pydantic schema.")
 
-                validator: TypeAdapter[List[BaseModel]] = TypeAdapter(List[self.pydantic_model])
+                # NOTE There is a mypy limitation with tracking self.pydantic_model across method boundaries even though it's properly defined in __init__ and we have a None check above.
+                # This is a known limitation with dynamic Pydantic model creation where mypy cannot statically verify the type of dynamically created models at analysis time.
+                # The type: ignore[name-defined] suppresses this specific mypy error while maintaining type safety elsewhere and proper runtime behavior.
+                validator: TypeAdapter[List[BaseModel]] = TypeAdapter(List[self.pydantic_model])  # type: ignore[name-defined]
                 validated_data: List[BaseModel] = validator.validate_python(shared_input_data)
 
                 self.log_and_update_dashboard(f"✅ SUCCESS: Validated {len(validated_data)} records using dynamic Pydantic schema.")
@@ -52,9 +55,9 @@ class DataValidationAgent(BaseAgent):
             except Exception as e:
                 self.log_and_update_dashboard(f"❌ FAILURE: Dynamic Pydantic schema validation failed.\n{e}")
                 return False
-
-        self.log_and_update_dashboard("⚠️ WARNING: Dynamic Pydantic schema unavailable, using fallback schema.")
-        return self.validate_data_with_fallback(shared_input_data)
+        else:
+            self.log_and_update_dashboard("⚠️ WARNING: Dynamic Pydantic schema unavailable, using fallback schema.")
+            return self.validate_data_with_fallback(shared_input_data)
 
     def validate_data_with_fallback(self, shared_input_data: Any) -> bool:
         self.log_and_update_dashboard(f"▶️ START: Attempting to validate {len(shared_input_data)} records (using fallback schema).")

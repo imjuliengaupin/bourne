@@ -3,7 +3,7 @@ import inspect
 import time
 from abc import ABC
 from types import FrameType
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from agents.dataclasses.agent_context import AgentContext
 
@@ -25,7 +25,7 @@ class BaseAgent(ABC):
 
         return "unknown_caller_method()"
 
-    def log_and_update_dashboard(self, message: Optional[str] = None, data_before_transformation=None, data_after_transformation=None) -> None:
+    def log_and_update_dashboard(self, message: Optional[str] = None, data_before_transformation: Optional[Dict[str, Any]] = None, data_after_transformation: Optional[Dict[str, Any]] = None) -> None:
         if message:
             self.agent_context.logger.log(self.get_class_label(), message)
 
