@@ -1,6 +1,6 @@
 [
   {
-    "task_name": "TestTask1",
+    "task_name": "DemoIngest",
     "agent_name": "DataIngestionAgent",
     "agent_method_name": "nonexistent_method",
     "depends_on": [],

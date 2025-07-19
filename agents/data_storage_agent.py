@@ -39,7 +39,7 @@ class DataStorageAgent(BaseAgent):
             self.log_and_update_dashboard(f"❌ FAILURE: Invalid output path format.\n{e}")
             return False
 
-        self.log_and_update_dashboard(f"▶️ START: Attempting to save {len(shared_input_data)} records to {self.transform_output_path}.")
+        self.log_and_update_dashboard(f"▶️ START: Attempting to save {len(shared_input_data)} record(s) to {self.transform_output_path}.")
 
         try:
             os.makedirs(os.path.dirname(self.transform_output_path), exist_ok=True)
@@ -51,7 +51,7 @@ class DataStorageAgent(BaseAgent):
                 else:
                     json.dump(shared_input_data, file, indent=2, ensure_ascii=False)
 
-            self.log_and_update_dashboard(f"✅ SUCCESS: Saved {len(shared_input_data)} records to {self.transform_output_path}.")
+            self.log_and_update_dashboard(f"✅ SUCCESS: Saved {len(shared_input_data)} record(s) to {self.transform_output_path}.")
             return True
 
         except Exception as e:

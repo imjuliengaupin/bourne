@@ -47,11 +47,17 @@ class DataIngestionAgent(BaseAgent):
                 else:
                     records = json.load(file)
 
-            if records:
-                num_records: int = len(records) if isinstance(records, (list, dict)) else 1
+            if records is not None:
+                num_records: int = 0
+
+                if isinstance(records, dict):
+                    num_records = 1
+                elif isinstance(records, list):
+                    num_records = len(records)
+
                 file_size: int = os.path.getsize(source_path)
 
-                self.log_and_update_dashboard(f"✅ SUCCESS: Ingested {num_records} records ({file_size} bytes) from '{source_type}': {source_path}.")
+                self.log_and_update_dashboard(f"✅ SUCCESS: Ingested {num_records} record(s) ({file_size} bytes) from '{source_type}': {source_path}.")
                 return records
             else:
                 self.log_and_update_dashboard(f"⚠️ WARNING: No data provided, empty structure found in '{source_type}' under {source_path}.")

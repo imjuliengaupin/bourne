@@ -1,6 +1,6 @@
 {
   "source_type": "local_file",
-  "source_path": "nonexistent/path/data.json",
+  "source_path": "nonexistent/path/basic.json",
   "expected_schema": {
     "ID": "int",
     "Name": "str",

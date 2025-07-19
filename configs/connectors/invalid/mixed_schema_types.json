@@ -1,0 +1,9 @@
+{
+  "source_type": "local_file",
+  "source_path": "data/invalid/mixed_schema_types.json",
+  "expected_schema": {
+    "ID": "int",
+    "Name": "str",
+    "Timestamp": "str"
+  }
+}

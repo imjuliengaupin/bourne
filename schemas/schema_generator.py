@@ -26,10 +26,8 @@ class SchemaGenerator:
             python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(field_type.lower())
 
             if python_type:
-                # Create field with original name as alias (for case transformations)
                 fields[field_name.lower()] = (python_type, Field(alias=field_name))
             else:
-                # Default to str for unknown types
                 fields[field_name.lower()] = (str, Field(alias=field_name))
 
         # NOTE There is a mypy limitation with create_model()'s overload system

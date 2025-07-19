@@ -1,0 +1,11 @@
+{
+  "source_type": "local_file",
+  "source_path": "data/valid/camelcase.json",
+  "expected_schema": {
+    "UserID": "int",
+    "FullName": "str",
+    "CreatedOn": "str"
+  },
+  "transform_mode": "snake_case_keys",
+  "transform_output_path": "data/outputs/camelcase_to_snakecase_transformed.json"
+}

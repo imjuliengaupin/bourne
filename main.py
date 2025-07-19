@@ -91,13 +91,13 @@ def parse_program_args() -> Namespace:
 
     parser.add_argument(
         "--workflow",
-        default="demo/workflow_plan.json",
+        default="configs/workflows/valid/workflow.json",
         help="Path to the workflow plan configuration file."
     )
 
     parser.add_argument(
         "--connector",
-        default="demo/source_data_connector.json",
+        default="configs/connectors/valid/connector.json",
         help="Path to the source data connector configuration file."
     )
 

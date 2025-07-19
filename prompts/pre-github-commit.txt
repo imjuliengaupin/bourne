@@ -1,0 +1,63 @@
+Please perform a comprehensive pre-commit review of my Bourne data processing framework. Check the following areas and provide a concise summary:
+
+## 🔧 **Code Quality & Type Safety**
+- [ ] MyPy type checking issues (especially dynamic Pydantic models)
+- [ ] Missing or incorrect type hints
+- [ ] Inconsistent import statements
+- [ ] Unused imports or variables
+
+## 🧪 **Demo Scenarios & Testing**
+- [ ] All demo configurations match actual data files
+- [ ] Field name consistency between configs and test data
+- [ ] Edge cases covered (empty data, null values, nested objects)
+- [ ] All transformation modes tested
+
+## 🏗️ **Architecture & Dependencies**
+- [ ] Agent dependencies properly defined
+- [ ] Workflow task dependencies correct
+- [ ] Schema validation hierarchy working (Primary → Fallback → Manual)
+- [ ] Data flow integrity maintained
+
+## 📊 **Schema Management**
+- [ ] Dynamic schema updates after transformations
+- [ ] Transformation mode handling complete
+- [ ] Schema detection logic working
+- [ ] Fallback schema generators consistent
+
+## 🔄 **Integration Points**
+- [ ] AgentContext properly wired
+- [ ] shared_input_data flow between agents
+- [ ] Dashboard updates functioning
+- [ ] Logger consistency across agents
+
+## 📁 **File Organization**
+- [ ] Demo folder structure follows recommendations
+- [ ] Data files in correct locations
+- [ ] Configuration files properly organized
+- [ ] No orphaned or misplaced files
+
+## 🚨 **Error Handling**
+- [ ] Exception handling comprehensive
+- [ ] Graceful degradation implemented
+- [ ] Clear error messages for debugging
+- [ ] Retry logic working correctly
+
+## 📝 **Documentation & Comments**
+- [ ] MyPy ignore comments accurate and justified
+- [ ] Complex logic properly documented
+- [ ] Method docstrings where needed
+- [ ] README or demo instructions up-to-date
+
+## 🔒 **Constants & Configuration**
+- [ ] All transformation modes defined in constants
+- [ ] Status constants used consistently
+- [ ] Configuration validation working
+- [ ] Required vs optional fields handled
+
+## 🎯 **Performance & Best Practices**
+- [ ] No obvious performance bottlenecks
+- [ ] Memory usage reasonable for large datasets
+- [ ] Clean separation of concerns
+- [ ] SOLID principles followed
+
+Please highlight any critical issues that must be fixed before commit, and suggest any improvements for maintainability or extensibility.

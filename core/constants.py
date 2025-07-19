@@ -4,6 +4,9 @@ LOCAL_FILE_TYPE: str = "local_file"
 
 # Supported data transformation constants
 LOWERCASE_KEYS: str = "lowercase_keys"
+UPPERCASE_KEYS: str = "uppercase_keys"
+SNAKE_CASE_KEYS: str = "snake_case_keys"
+NORMALIZE_TYPES: str = "normalize_types"
 
 # Status constants
 STATUS_PENDING: str = "PENDING"

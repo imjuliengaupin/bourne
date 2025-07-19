@@ -1,5 +1,5 @@
 [
   {
-    "task_name": "TestTask1",
+    "task_name": "DemoIngest",
     "agent_name": "DataIngestionAgent",
     "agent_method_name": "ingest_data"

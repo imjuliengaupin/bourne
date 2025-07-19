@@ -1,0 +1,11 @@
+{
+  "source_type": "local_file",
+  "source_path": "data/valid/basic.json",
+  "expected_schema": {
+    "ID": "int",
+    "Name": "str",
+    "Timestamp": "str"
+  },
+  "transform_mode": "normalize_types",
+  "transform_output_path": "data/outputs/basic_normalize_transformed.json"
+}

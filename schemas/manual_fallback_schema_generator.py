@@ -4,7 +4,7 @@ from typing import ClassVar, List
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
-class Record(BaseModel):
+class FallbackRecord(BaseModel):
     id: int = Field(alias="ID")
     name: str = Field(alias="Name")
     timestamp: str = Field(alias="Timestamp")
@@ -14,5 +14,5 @@ class Record(BaseModel):
     )
 
 
-class RecordList(RootModel[List[Record]]):
+class FallbackRecordList(RootModel[List[FallbackRecord]]):
     pass

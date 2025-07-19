@@ -1,0 +1,11 @@
+[
+  {
+    "ID": 1,
+    "Name": "User1",
+    "Details": {
+      "Age": 30,
+      "City": "Chicago",
+      "State": "Illinois"
+    }
+  }
+]

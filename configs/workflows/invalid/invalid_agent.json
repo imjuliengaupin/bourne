@@ -1,8 +1,8 @@
 [
   {
-    "task_name": "TestTask1",
+    "task_name": "DemoTask",
     "agent_name": "NonExistentAgent",
-    "agent_method_name": "some_method",
+    "agent_method_name": "nonexistent_method",
     "depends_on": [],
     "requires_input": false,
     "produces_output": false,
