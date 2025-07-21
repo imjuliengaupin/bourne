@@ -20,7 +20,7 @@ class FallbackSchemaGenerator:
             fields[field_name] = (python_type, Field(...))
 
         fallback_model: Type[BaseModel] = create_model(
-            'DynamicFallbackRecord',
+            'DynamicFallbackRecordModel',
             **fields
         )
 

@@ -82,51 +82,44 @@ class DataTransformationAgent(BaseAgent):
             self.log_and_update_dashboard(f"❌ FAILURE: Invalid data type for transformation: '{type(data_before_transformation)}'.")
             return {}
 
-        data_after_transformation: Dict[str, Any] = {}
+        if not transformation_mode:
+            self.log_and_update_dashboard("ℹ️ INFO: No transformation mode specified. Returning record(s) unchanged.")
+            return data_before_transformation.copy()
+
         metadata_timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S")
 
         try:
-            if not transformation_mode:
-                self.log_and_update_dashboard("ℹ️ INFO: No transformation mode specified. Returning record(s) unchanged.")
-                return data_before_transformation.copy()
-            elif transformation_mode == constants.LOWERCASE_KEYS:
-                data_after_transformation = {key.lower(): value for key, value in data_before_transformation.items()}
-                data_after_transformation["is_transformed"] = True
-                data_after_transformation["transformed_on"] = metadata_timestamp
+            data_after_transformation: Dict[str, Any] = self.apply_nested_data_transformation(data_before_transformation, transformation_mode)
 
-                self.log_and_update_dashboard(None, data_before_transformation, data_after_transformation)
-            elif transformation_mode == constants.UPPERCASE_KEYS:
-                data_after_transformation = {key.upper(): value for key, value in data_before_transformation.items()}
-                data_after_transformation["is_transformed"] = True
-                data_after_transformation["transformed_on"] = metadata_timestamp
+            # Handle type normalization separately since it affects values, not keys
+            if transformation_mode == constants.NORMALIZE_TYPES:
+                data_after_transformation = self.normalize_all_types_recursively(data_after_transformation)
 
-                self.log_and_update_dashboard(None, data_before_transformation, data_after_transformation)
-            elif transformation_mode == constants.SNAKE_CASE_KEYS:
-                for key, value in data_before_transformation.items():
-                    snake_case_key: str = re.sub(r'(?<!^)(?=[A-Z])', '_', key).lower()
-                    data_after_transformation[snake_case_key] = value
+            data_after_transformation["is_transformed"] = True
+            data_after_transformation["transformed_on"] = metadata_timestamp
 
-                data_after_transformation["is_transformed"] = True
-                data_after_transformation["transformed_on"] = metadata_timestamp
-
-                self.log_and_update_dashboard(None, data_before_transformation, data_after_transformation)
-            elif transformation_mode == constants.NORMALIZE_TYPES:
-                for key, value in data_before_transformation.items():
-                    data_after_transformation[key] = str(value)
-
-                data_after_transformation["is_transformed"] = True
-                data_after_transformation["transformed_on"] = metadata_timestamp
-
-                self.log_and_update_dashboard(None, data_before_transformation, data_after_transformation)
-            else:
-                self.log_and_update_dashboard(f"⚠️ WARNING: Unknown transformation mode '{transformation_mode}'. Supported modes: {self.supported_transformation_modes}. Returning record unchanged.")
-                return data_before_transformation.copy()
+            self.log_and_update_dashboard(None, data_before_transformation, data_after_transformation)
+            return data_after_transformation
 
         except Exception as e:
             self.log_and_update_dashboard(f"❌ FAILURE: Error occurred in {self.get_caller_method()}.\n{e}")
             return {"error": e, "original_record": data_before_transformation.copy()}
 
-        return data_after_transformation
+    def apply_nested_data_transformation(self, data: Dict[str, Any], transformation_mode: Optional[str]) -> Dict[str, Any]:
+        transformed_data: Dict[str, Any] = {}
+
+        for key, value in data.items():
+            if isinstance(value, dict):
+                # Recursively transform nested dictionary objects
+                transformed_nested = self.apply_nested_data_transformation(value, transformation_mode)
+                transformed_key = self.transform_key(key, transformation_mode)
+                transformed_data[transformed_key] = transformed_nested
+            else:
+                # Transform non-dictionary (primitive) field values
+                transformed_key = self.transform_key(key, transformation_mode)
+                transformed_data[transformed_key] = value
+
+        return transformed_data
 
     def apply_schema_transformation(self, original_schema: Dict[str, str]) -> Dict[str, str]:
         transformed_schema: Dict[str, str] = {}
@@ -179,3 +172,25 @@ class DataTransformationAgent(BaseAgent):
 
         except Exception as e:
             self.log_and_update_dashboard(f"⚠️ WARNING: Failed to update schema for transformed data validation.\n{e}")
+
+    def transform_key(self, key: str, transformation_mode: str) -> str:
+        """Transform a single key based on transformation mode"""
+        if transformation_mode == constants.LOWERCASE_KEYS:
+            return key.lower()
+        elif transformation_mode == constants.UPPERCASE_KEYS:
+            return key.upper()
+        elif transformation_mode == constants.SNAKE_CASE_KEYS:
+            return re.sub(r'(?<!^)(?=[A-Z])', '_', key).lower()
+        else:
+            return key
+
+    def normalize_all_types_recursively(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        normalized_data: Dict[str, Any] = {}
+
+        for key, value in data.items():
+            if isinstance(value, dict):
+                normalized_data[key] = self.normalize_all_types_recursively(value)
+            else:
+                normalized_data[key] = str(value)
+
+        return normalized_data

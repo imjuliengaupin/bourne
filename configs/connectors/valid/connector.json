@@ -1,9 +1,13 @@
 {
   "source_type": "local_file",
-  "source_path": "data/valid/single_record.json",
+  "source_path": "data/valid/nested_object.json",
   "expected_schema": {
     "ID": "int",
     "Name": "str",
-    "Timestamp": "str"
+    "Details": {
+      "Age": "int",
+      "City": "str",
+      "State": "str"
+    }
   }
 }

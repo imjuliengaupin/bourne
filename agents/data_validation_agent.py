@@ -30,13 +30,19 @@ class DataValidationAgent(BaseAgent):
         self.expected_schema: Dict[str, Type[Any]] = {}
 
         # Keep existing type mapping for backwards compatibility
-        for key, python_type_name in raw_expected_schema.items():
-            python_type_obj: Optional[Type[Any]] = SchemaGenerator.TYPE_MAP.get(str(python_type_name).lower())
-
-            if python_type_obj:
-                self.expected_schema[key] = python_type_obj
+        for key, field_type in raw_expected_schema.items():
+            if isinstance(field_type, dict):
+                # Handle nested object(s), treat as dict type for manual fallback
+                self.expected_schema[key] = dict
             else:
-                self.log_and_update_dashboard(f"⚠️ WARNING: Unknown type '{python_type_name}' in 'expected_schema' for key '{key}'. Skipping...")
+                # Handle non-dictionary (primitive) types
+                python_type_obj: Optional[Type[Any]] = SchemaGenerator.TYPE_MAP.get(str(field_type).lower())
+
+                if python_type_obj:
+                    self.expected_schema[key] = python_type_obj
+                else:
+                    self.log_and_update_dashboard(f"⚠️ WARNING: Unknown type '{field_type}' in 'expected_schema' for key '{key}'. Using str type as a fallback.")
+                    self.expected_schema[key] = str
 
     def validate_data(self, shared_input_data: Any) -> bool:
         if not shared_input_data:
