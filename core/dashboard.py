@@ -1,5 +1,5 @@
 
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from rich.columns import Columns
 from rich.console import Console
@@ -8,7 +8,7 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
-from core import constants
+from core.constants import AgentTaskResult
 from core.logger import Logger
 from core.workflow_task import WorkflowTask
 
@@ -24,11 +24,12 @@ class Dashboard:
     ]
 
     STATUS_STYLES: Dict[str, Style] = {
-        constants.STATUS_SUCCESS: Style(color="green", bold=True),
-        constants.STATUS_IN_PROGRESS: Style(color="blue", bold=True),
-        constants.STATUS_FAILED: Style(color="red", bold=True),
-        constants.STATUS_RETRIED: Style(color="orange3", bold=True),
-        constants.STATUS_PENDING: Style(color="bright_black", bold=True),
+        AgentTaskResult.PENDING.value: Style(color="bright_black", bold=True),
+        AgentTaskResult.IN_PROGRESS.value: Style(color="blue", bold=True),
+        AgentTaskResult.SUCCESS.value: Style(color="green", bold=True),
+        AgentTaskResult.SUCCESS_WITH_WARNINGS.value: Style(color="orange3", bold=True),
+        AgentTaskResult.FAILED.value: Style(color="red", bold=True),
+        AgentTaskResult.RETRIED.value: Style(color="orange3", bold=True),
     }
 
     def __init__(self, logger: Logger) -> None:
@@ -111,47 +112,122 @@ class Dashboard:
         table.add_column("Data Keys (After)")
         table.add_column("Data Values (After)")
 
-        keys_before_transformation: List[str] = list(data_before_transformation.keys())
-        keys_after_transformation: List[str] = list(data_after_transformation.keys())
-        used_keys_after_transformation: Set[str] = set()
-        key_style: str = "bold green"
-        value_style: str = "bold green"
+        # New logic starts here
+        all_changes = self.detect_data_changes(data_before_transformation, data_after_transformation)
 
-        for key_before_transformation in keys_before_transformation:
-            matching_key: str | None = self.find_matching_key_after_transform(key_before_transformation, keys_after_transformation)
-
-            if matching_key is not None:
-                used_keys_after_transformation.add(matching_key)
-
-            value_before_transformation: str = str(data_before_transformation.get(key_before_transformation)) if key_before_transformation else ""
-            value_after_transformation: str = str(data_after_transformation.get(matching_key)) if matching_key else ""
-
-            key_style = key_style if matching_key and key_before_transformation != matching_key else ""
-            value_style = value_style if str(value_before_transformation) != str(value_after_transformation) else "bright_black"
-
-            table.add_row(
-                Text(str(key_before_transformation), style="bright_black"),
-                Text(str(value_before_transformation), style="bright_black"),
-                Text(str(matching_key) if matching_key else "", style=key_style),
-                Text(str(value_after_transformation), style=value_style)
-            )
-
-        for final_key_after_transformation in keys_after_transformation:
-            if final_key_after_transformation not in used_keys_after_transformation:
-                final_value_after_transformation: str = str(data_after_transformation.get(final_key_after_transformation))
-
-                table.add_row(
-                    "",
-                    "",
-                    Text(str(final_key_after_transformation), style=key_style),
-                    Text(str(final_value_after_transformation), style=value_style)
-                )
+        self.add_data_changes_to_table(table, all_changes)
 
         return Panel(
             table,
             title="LIVE DATA PREVIEW",
             border_style="bold blue"
         )
+
+    def detect_data_changes(self, before: Dict[str, Any], after: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Detect all data changes including nested arrays and objects"""
+        changes = []
+
+        # Track all keys from both datasets
+        all_keys_before = set(before.keys())
+        all_keys_after = set(after.keys())
+
+        # Process each key from before data
+        for key_before in all_keys_before:
+            matching_key_after = self.find_matching_key_after_transform(key_before, list(all_keys_after))
+
+            if matching_key_after:
+                all_keys_after.remove(matching_key_after)  # Mark as processed
+
+            value_before = before[key_before]
+            value_after = after[matching_key_after] if matching_key_after else None
+
+            # Check if this is an array of objects that needs nested analysis
+            if isinstance(value_before, list) and isinstance(value_after, list):
+                nested_changes = self.detect_nested_data_changes(key_before, matching_key_after, value_before, value_after)
+                changes.extend(nested_changes)
+            else:
+                # Regular key-value pair
+                changes.append({
+                    'path': '',
+                    'key_before': key_before,
+                    'key_after': matching_key_after or '',
+                    'value_before': str(value_before),
+                    'value_after': str(value_after) if value_after is not None else '',
+                    'key_changed': key_before != matching_key_after if matching_key_after else True,
+                    'value_changed': str(value_before) != str(value_after) if value_after is not None else True
+                })
+
+        # Add any remaining keys that only exist in after data
+        for remaining_key in all_keys_after:
+            changes.append({
+                'path': '',
+                'key_before': '',
+                'key_after': remaining_key,
+                'value_before': '',
+                'value_after': str(after[remaining_key]),
+                'key_changed': True,
+                'value_changed': True
+            })
+
+        return changes
+
+    def detect_nested_data_changes(self, key_before: str, key_after: Optional[str], array_before: List[Any], array_after: List[Any]) -> List[Dict[str, Any]]:
+        """Detect changes within arrays, especially arrays of objects"""
+        changes = []
+
+        # First, add the top-level array key change
+        changes.append({
+            'path': '',
+            'key_before': key_before,
+            'key_after': key_after or '',
+            'value_before': f"Array[{len(array_before)}]",
+            'value_after': f"Array[{len(array_after)}]" if key_after else '',
+            'key_changed': key_before != key_after if key_after else True,
+            'value_changed': False  # Array length comparison
+        })
+
+        # Then, analyze objects within the arrays
+        for i, (item_before, item_after) in enumerate(zip(array_before, array_after)):
+            if isinstance(item_before, dict) and isinstance(item_after, dict):
+                # CRITICAL: Detect changes within array objects
+                for obj_key_before in item_before.keys():
+                    matching_obj_key_after = self.find_matching_key_after_transform(obj_key_before, list(item_after.keys()))
+
+                    if matching_obj_key_after:
+                        obj_value_before = str(item_before[obj_key_before])
+                        obj_value_after = str(item_after[matching_obj_key_after])
+
+                        changes.append({
+                            'path': f'[{i}]',
+                            'key_before': obj_key_before,
+                            'key_after': matching_obj_key_after,
+                            'value_before': obj_value_before,
+                            'value_after': obj_value_after,
+                            'key_changed': obj_key_before != matching_obj_key_after,
+                            'value_changed': obj_value_before != obj_value_after
+                        })
+
+        return changes
+
+    def add_data_changes_to_table(self, table: Table, changes: List[Dict[str, Any]]) -> None:
+        """Add all detected changes to the table with appropriate highlighting"""
+
+        for change in changes:
+            # Determine styling based on what changed
+            key_style = "bold green" if change['key_changed'] else "bright_black"
+            value_style = "bold green" if change['value_changed'] else "bright_black"
+
+            # Format path for nested items
+            path_prefix = f"{change['path']}." if change['path'] else ""
+            key_before_display = f"{path_prefix}{change['key_before']}" if change['key_before'] else ""
+            key_after_display = f"{path_prefix}{change['key_after']}" if change['key_after'] else ""
+
+            table.add_row(
+                Text(key_before_display, style="bright_black"),
+                Text(change['value_before'], style="bright_black"),
+                Text(key_after_display, style=key_style),
+                Text(change['value_after'], style=value_style)
+            )
 
     def find_matching_key_after_transform(self, key_before_transformation: str, keys_after_transformation: List[str]) -> Optional[str]:
         for key in keys_after_transformation:
