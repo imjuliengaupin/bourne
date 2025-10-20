@@ -7,8 +7,9 @@ from typing import List, Optional
 
 class Logger:
 
-    def __init__(self, max_logs: int) -> None:
+    def __init__(self, max_logs: int, debug_mode_enabled: bool) -> None:
         self.max_logs: int = max(0, max_logs)
+        self.debug_mode_enabled: bool = debug_mode_enabled
         self.logs: List[str] = []
 
     def get_class_label(self) -> str:
@@ -32,13 +33,14 @@ class Logger:
         try:
             formatted_message: str = f"[{self.get_timestamp()}] [{class_label}] {message}"
 
-            self.logs.append(formatted_message)
+            if self.debug_mode_enabled:
+                self.logs.append(formatted_message)
 
-            if self.max_logs > 0:
-                excess_logs: int = len(self.logs) - self.max_logs
+                if self.max_logs > 0:
+                    excess_logs: int = len(self.logs) - self.max_logs
 
-                if excess_logs > 0:
-                    self.logs = self.logs[excess_logs:]
+                    if excess_logs > 0:
+                        self.logs = self.logs[excess_logs:]
 
         except Exception as e:
             print(f"[{self.get_timestamp()}] [{self.get_class_label()}] ❌ FAILURE: Error occurred in {self.get_caller_method()}.\n{e}")

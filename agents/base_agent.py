@@ -29,7 +29,7 @@ class BaseAgent(ABC):
         if message:
             self.agent_context.logger.log(self.get_class_label(), message)
 
-        if hasattr(self.agent_context, 'dashboard_state') and self.agent_context.dashboard_state:
+        if self.agent_context.logger.debug_mode_enabled and hasattr(self.agent_context, 'dashboard_state') and self.agent_context.dashboard_state:
             self.agent_context.dashboard_state.update(self.agent_context.dashboard.render(
                 self.agent_context.workflow_plan_state.get_workflow_tasks(),
                 self.agent_context.logger.get_logs(),
@@ -37,4 +37,4 @@ class BaseAgent(ABC):
                 data_after_transformation=data_after_transformation
             ))
 
-            time.sleep(0.5)
+            time.sleep(0.05)
