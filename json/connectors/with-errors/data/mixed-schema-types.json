@@ -1,0 +1,17 @@
+[
+  {
+    "ID": "1",
+    "Timestamp": true,
+    "Key": true
+  },
+  {
+    "ID": 2,
+    "Timestamp": "2025-01-01 00:00:00",
+    "Key": "123"
+  },
+  {
+    "ID": 3,
+    "Timestamp": 123,
+    "Key": 3.0
+  }
+]

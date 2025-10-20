@@ -1,0 +1,7 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/with-arrays/data/primitive-array.json",
+  "expected_schema": {
+    "PrimitiveArray": ["str"]
+  }
+}

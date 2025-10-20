@@ -1,0 +1,8 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/default/data/multi-record.ndjson",
+  "expected_schema": {
+    "ID": "int",
+    "Timestamp": "str"
+  }
+}

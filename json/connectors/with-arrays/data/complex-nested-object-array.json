@@ -1,0 +1,23 @@
+{
+  "ObjectArray": [
+    {
+      "Key": "Value",
+      "NestedObjectArray": [
+        {
+          "Key": "Value",
+          "NestedObjectArray": [
+            {
+              "Key": "Value",
+              "NestedObject": {
+                "Key": "Value",
+                "NestedObject": {
+                  "Key": "Value"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

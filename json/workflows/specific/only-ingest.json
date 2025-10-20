@@ -1,0 +1,9 @@
+{
+  "task_name": "DemoIngest",
+  "agent_name": "DataIngestionAgent",
+  "agent_method_name": "ingest_data",
+  "depends_on": [],
+  "requires_input": false,
+  "produces_output": true,
+  "max_retries": 1
+}

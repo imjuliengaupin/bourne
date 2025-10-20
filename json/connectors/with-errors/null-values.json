@@ -1,0 +1,8 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/with-errors/data/null-values.json",
+  "expected_schema": {
+    "ID": "int",
+    "Timestamp": "str"
+  }
+}

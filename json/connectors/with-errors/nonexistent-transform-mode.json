@@ -1,0 +1,10 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/with-errors/data/nonexistent-transform-mode.json",
+  "expected_schema": {
+    "ID": "int",
+    "Timestamp": "str"
+  },
+  "transform_mode": "nonexistent_transform_mode",
+  "transform_output_path": "data/outputs/data_transformed.json"
+}

@@ -1,0 +1,9 @@
+{
+  "ID": 1,
+  "Name": "User1",
+  "Details": {
+    "Age": 21,
+    "City": "City1",
+    "State": "State1"
+  }
+}

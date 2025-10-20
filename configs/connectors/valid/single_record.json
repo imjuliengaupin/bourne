@@ -1,9 +1,0 @@
-{
-  "source_type": "local_file",
-  "source_path": "data/valid/single_record.json",
-  "expected_schema": {
-    "ID": "int",
-    "Name": "str",
-    "Timestamp": "str"
-  }
-}

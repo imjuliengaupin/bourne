@@ -1,0 +1,11 @@
+{
+  "ID": 1,
+  "User": {
+    "Details": { "Name": "User1", "Age": 21 },
+    "Roles": [
+      { "Name": "Role1", "RoleID": 1 },
+      { "Name": "Role2", "RoleID": 2 },
+      { "Name": "Role3", "RoleID": 3 }
+    ]
+  }
+}
