@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from agents.base_agent import BaseAgent
 from agents.dataclasses.agent_context import AgentContext
-from core import constants
+from core.constants import AgentTaskResult
 from core.workflow_task import WorkflowTask
 from core.workflow_task_queue import WorkflowTaskQueue
 
@@ -29,7 +29,7 @@ class CoordinatorAgent(BaseAgent):
         initial_max_cycles: int = max_cycles_without_progress
 
         try:
-            while any(task.get("task_status") in [constants.STATUS_PENDING, constants.STATUS_RETRIED, constants.STATUS_IN_PROGRESS] for task in self.agent_context.workflow_plan_state.workflow_tasks):
+            while any(task.get("task_status") in [AgentTaskResult.PENDING.value, AgentTaskResult.IN_PROGRESS.value, AgentTaskResult.RETRIED.value] for task in self.agent_context.workflow_plan_state.workflow_tasks):
                 workflow_task: Optional[WorkflowTask] = self.get_next_runnable_task()
 
                 if workflow_task:
@@ -44,7 +44,7 @@ class CoordinatorAgent(BaseAgent):
                     max_cycles_without_progress = initial_max_cycles
                 else:
                     if self.workflow_task_queue.is_empty():
-                        if not any(task.get("task_status") in [constants.STATUS_PENDING, constants.STATUS_RETRIED, constants.STATUS_IN_PROGRESS] for task in self.agent_context.workflow_plan_state.workflow_tasks):
+                        if not any(task.get("task_status") in [AgentTaskResult.PENDING.value, AgentTaskResult.IN_PROGRESS.value, AgentTaskResult.RETRIED.value] for task in self.agent_context.workflow_plan_state.workflow_tasks):
                             self.log_and_update_dashboard("ℹ️ INFO: Workflow queue is empty and all tasks are finished.")
                         else:
                             self.log_and_update_dashboard("⚠️ WARNING: Workflow queue is empty, but unfinished tasks remain (potential dependency cycle or error). Checking final state...")
@@ -69,11 +69,11 @@ class CoordinatorAgent(BaseAgent):
     def report_final_status(self) -> None:
         final_statuses: List[str] = [str(task.get("task_status")) for task in self.agent_context.workflow_plan_state.workflow_tasks]
 
-        if all(status == constants.STATUS_SUCCESS for status in final_statuses):
+        if all(status == AgentTaskResult.SUCCESS.value for status in final_statuses):
             self.log_and_update_dashboard("🎉 FINISHED: No failed or unfinished tasks.")
         else:
-            failed_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") == constants.STATUS_FAILED]
-            unfinished_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") in [constants.STATUS_PENDING, constants.STATUS_RETRIED, constants.STATUS_IN_PROGRESS]]
+            failed_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") == AgentTaskResult.FAILED.value]
+            unfinished_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") in [AgentTaskResult.PENDING.value, AgentTaskResult.IN_PROGRESS.value, AgentTaskResult.RETRIED.value]]
 
             if failed_tasks:
                 self.log_and_update_dashboard(f"⚠️ WARNING: Failed tasks: {failed_tasks}.")
@@ -96,7 +96,7 @@ class CoordinatorAgent(BaseAgent):
                     self.log_and_update_dashboard(f"⚠️ WARNING: Dependency check failed for task '{task.get('task_name')}': Dependent task '{dependent_task_name}' not found in workflow state.")
                     return False
 
-                if dependent_task.get("task_status") != constants.STATUS_SUCCESS:
+                if dependent_task.get("task_status") != AgentTaskResult.SUCCESS.value:
                     return False
 
             return True
@@ -151,7 +151,7 @@ class CoordinatorAgent(BaseAgent):
             return None, False
 
         if task_name:
-            self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, constants.STATUS_IN_PROGRESS)
+            self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, AgentTaskResult.IN_PROGRESS.value)
             self.log_and_update_dashboard(f"▶️ START: Executing task '{task_name}' using '{agent_name}.{agent_method_name}'.")
 
         result: Any = None
@@ -170,11 +170,28 @@ class CoordinatorAgent(BaseAgent):
                 if agent_method:
                     result = agent_method()
 
-            success = True
+            if hasattr(result, 'value') and hasattr(result, 'is_success'):
+                # Method returned TaskResult enum
+                success = result.is_success
+                task_status = result.status_string
+            elif isinstance(result, bool):
+                # Method returned boolean (for backward compatibility)
+                success = result
+                task_status = AgentTaskResult.SUCCESS.value if result else AgentTaskResult.FAILED.value
+            else:
+                # Fallback for other return types
+                success = bool(result)
+                task_status = AgentTaskResult.SUCCESS.value if success else AgentTaskResult.FAILED.value
 
         except Exception as e:
             self.log_and_update_dashboard(f"❌ FAILURE: Exception occurred in task '{task_name}' during execution.\n{e}")
             success = False
+            task_status = AgentTaskResult.FAILED.value
+
+        if success and task_name:
+            self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, task_status)
+        elif task_name:
+            self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, AgentTaskResult.FAILED.value)
 
         return result, success
 
@@ -184,8 +201,6 @@ class CoordinatorAgent(BaseAgent):
 
         try:
             if success and task_name:
-                self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, constants.STATUS_SUCCESS)
-
                 produces_output: bool = task.get("produces_output") or False
 
                 if produces_output:
@@ -198,18 +213,18 @@ class CoordinatorAgent(BaseAgent):
                     task["retries_left"] = retries_left - 1
 
                     if task_name:
-                        self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, constants.STATUS_RETRIED)
+                        self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, AgentTaskResult.RETRIED.value)
 
                     self.workflow_task_queue.add_workflow_task(task)
                     self.log_and_update_dashboard(f"🔁 RE-QUEUE: Task '{task_name}' failed. Re-queuing to retry ({task.get('retries_left')} left).")
                 else:
                     if task_name:
-                        self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, constants.STATUS_FAILED)
+                        self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, AgentTaskResult.FAILED.value)
                         self.log_and_update_dashboard(f"❌ FAILURE: Task '{task_name}' failed permanently after all retries.")
 
         except Exception as e:
             if task_name:
-                self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, constants.STATUS_FAILED)
+                self.agent_context.workflow_plan_state.update_workflow_task_status(task_name, AgentTaskResult.FAILED.value)
                 self.log_and_update_dashboard(f"❌ FAILURE: Error handling result for task '{task_name}'.\n{e}")
 
         return new_shared_input_data

@@ -3,7 +3,7 @@ import inspect
 from types import FrameType
 from typing import Any, Dict, List, Optional, cast
 
-from core import constants
+from core.constants import AgentTaskResult
 from core.logger import Logger
 from core.workflow_task import WorkflowTask
 
@@ -61,7 +61,7 @@ class WorkflowManager:
                 workflow_step.setdefault("max_retries", 0)
 
                 workflow_step["retries_left"] = workflow_step.get("max_retries")
-                workflow_step["task_status"] = constants.STATUS_PENDING
+                workflow_step["task_status"] = AgentTaskResult.PENDING.value
 
                 workflow_task: WorkflowTask = cast(WorkflowTask, workflow_step)
 
