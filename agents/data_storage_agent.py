@@ -25,7 +25,7 @@ class DataStorageAgent(BaseAgent):
             return False
 
         if not self.transform_output_path:
-            self.log_and_update_dashboard("ℹ️ INFO: No transformation output path specified, ignoring data save operations.")
+            self.log_and_update_dashboard("⚠️ WARNING: No transformation output path specified, skipping data save operation.")
             return False
 
         try:
