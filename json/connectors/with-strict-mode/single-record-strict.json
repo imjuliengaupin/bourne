@@ -1,0 +1,9 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/with-strict-mode/data/single-record-strict.json",
+  "expected_schema": {
+    "ID": "int",
+    "Timestamp": "str"
+  },
+  "strict_mode": true
+}

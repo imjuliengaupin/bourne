@@ -6,7 +6,16 @@ from typing import Any, Dict, List, Optional, Union
 from agents.base_agent import BaseAgent
 from agents.dataclasses.agent_context import AgentContext
 from core import constants
+from core.constants import AgentTaskResult
 from schemas.schema_generator import SchemaGenerator
+
+
+class ResultWithStatus(list):
+    """A list subclass that supports setting status attributes"""
+
+    def __init__(self, data=None):
+        super().__init__(data or [])
+        self.bourne_status: Optional[AgentTaskResult] = None
 
 
 class DataTransformationAgent(BaseAgent):
@@ -15,9 +24,15 @@ class DataTransformationAgent(BaseAgent):
         super().__init__(agent_context)
 
         self.transform_mode: Optional[str] = self.agent_context.source_data_connector_state.get("transform_mode") if self.agent_context.source_data_connector_state.get("transform_mode") else None
+        strict_mode: bool = self.agent_context.source_data_connector_state.is_strict_mode()
 
         if not self.transform_mode:
-            self.log_and_update_dashboard("ℹ️ INFO: Optional configuration 'transform_mode' is not specified. Proceeding...")
+            if strict_mode:
+                self.log_and_update_dashboard("❌ FAILURE: Optional configuration 'transform_mode' is not specified (strict mode enabled).")
+                # In strict mode, this should be handled at the workflow level
+                # For now, we'll still proceed but log the strict mode warning
+            else:
+                self.log_and_update_dashboard("ℹ️ INFO: Optional configuration 'transform_mode' is not specified. Proceeding...")
 
         self.supported_transformation_modes: List[str] = [
             constants.LOWERCASE_KEYS,
@@ -26,7 +41,7 @@ class DataTransformationAgent(BaseAgent):
             constants.NORMALIZE_TYPES,
         ]
 
-    def transform_data(self, shared_input_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def transform_data(self, shared_input_data: List[Dict[str, Any]]) -> ResultWithStatus:
         shared_input_data_count: int = 0
 
         if isinstance(shared_input_data, dict):
@@ -46,20 +61,43 @@ class DataTransformationAgent(BaseAgent):
                     records = shared_input_data
                 else:
                     self.log_and_update_dashboard("❌ FAILURE: Invalid data format, input list contains non-dictionary items.")
-                    return []
+                    result = ResultWithStatus([])
+                    result.bourne_status = AgentTaskResult.FAILED
+                    return result
             else:
                 self.log_and_update_dashboard(f"❌ FAILURE: Invalid data format, expected a dictionary or list of dictionaries, but got {type(shared_input_data).__name__} instead.")
-                return []
+                result = ResultWithStatus([])
+                result.bourne_status = AgentTaskResult.FAILED
+                return result
 
             if not records:
-                self.log_and_update_dashboard("⚠️ WARNING: No data provided.")
-                return []
+                strict_mode: bool = self.agent_context.source_data_connector_state.is_strict_mode()
+
+                if strict_mode:
+                    self.log_and_update_dashboard("❌ FAILURE: No data provided (strict mode enabled).")
+                    failed_result = ResultWithStatus([])
+                    failed_result.bourne_status = AgentTaskResult.FAILED
+                    return failed_result
+                else:
+                    self.log_and_update_dashboard("⚠️ WARNING: No data provided.")
+                    warning_result = ResultWithStatus([])
+                    warning_result.bourne_status = AgentTaskResult.SUCCESS_WITH_WARNINGS
+                    return warning_result
 
             transformed_records: List[Dict[str, Any]] = []
             is_records_transformed: bool = False
+            has_errors: bool = False
 
             for record in records:
                 transformed_record = self.apply_data_transformation(record, self.transform_mode)
+
+                # Check if strict mode returned an error
+                if "error" in transformed_record and "original_record" in transformed_record:
+                    has_errors = True
+                    self.log_and_update_dashboard("❌ FAILURE: Transformation failed for record in strict mode.")
+                    failed_result = ResultWithStatus([])
+                    failed_result.bourne_status = AgentTaskResult.FAILED
+                    return failed_result  # Fail fast in strict mode
 
                 transformed_records.append(transformed_record)
 
@@ -71,12 +109,28 @@ class DataTransformationAgent(BaseAgent):
             if is_records_transformed:
                 self.log_and_update_dashboard(f"✅ SUCCESS: Transformed {len(transformed_records)} record(s).")
                 self.update_schema_for_transformed_data()
-
-            return transformed_records
+                # Mark the data as successfully transformed
+                result = ResultWithStatus(transformed_records)
+                result.bourne_status = AgentTaskResult.SUCCESS
+                return result
+            elif not has_errors:
+                # No transformation occurred, but no errors either (relaxed mode)
+                self.log_and_update_dashboard(f"⚠️ WARNING: Processed {len(transformed_records)} record(s) without transformation.")
+                # Mark the data as having warnings
+                result = ResultWithStatus(transformed_records)
+                result.bourne_status = AgentTaskResult.SUCCESS_WITH_WARNINGS
+                return result
+            else:
+                # Mark as failed (shouldn't reach here due to fail-fast, but for safety)
+                result = ResultWithStatus([])
+                result.bourne_status = AgentTaskResult.FAILED
+                return result
 
         except Exception as e:
             self.log_and_update_dashboard(f"❌ FAILURE: Error occurred in {self.get_caller_method()}.\n{e}")
-            return []
+            failed_result = ResultWithStatus([])
+            failed_result.bourne_status = AgentTaskResult.FAILED
+            return failed_result
 
     def apply_data_transformation(self, data_before_transformation: Dict[str, Any], transformation_mode: Optional[str]) -> Dict[str, Any]:
         if not isinstance(data_before_transformation, dict):
@@ -84,8 +138,14 @@ class DataTransformationAgent(BaseAgent):
             return {}
 
         if not transformation_mode:
-            self.log_and_update_dashboard("⚠️ WARNING: No transformation mode specified. Returning record(s) unchanged.")
-            return data_before_transformation.copy()
+            strict_mode: bool = self.agent_context.source_data_connector_state.is_strict_mode()
+
+            if strict_mode:
+                self.log_and_update_dashboard("❌ FAILURE: No transformation mode specified (strict mode enabled).")
+                return {"error": "No transformation mode specified in strict mode", "original_record": data_before_transformation.copy()}
+            else:
+                self.log_and_update_dashboard("⚠️ WARNING: No transformation mode specified. Returning record(s) unchanged.")
+                return data_before_transformation.copy()
 
         metadata_timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -173,6 +233,10 @@ class DataTransformationAgent(BaseAgent):
             key = re.sub(r'([0-9])([A-Z])', r'\1_\2', key)
 
             return key.lower()
+        elif transformation_mode not in self.supported_transformation_modes:
+            # Log warning for unsupported transformation modes but don't fail
+            self.log_and_update_dashboard(f"⚠️ WARNING: Unsupported transformation mode '{transformation_mode}'. Returning key unchanged.")
+            return key
         else:
             return key
 

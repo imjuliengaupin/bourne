@@ -9,12 +9,14 @@ class ConnectorManager:
     def __init__(self, logger: Logger, source_data_connector: Optional[Dict[str, Any]]) -> None:
         self.logger: Logger = logger
         self.source_data_connector: Dict[str, Any] = source_data_connector if source_data_connector and isinstance(source_data_connector, dict) else {}
+        self.strict_mode: bool = self.source_data_connector.get("strict_mode", False)
         self.required_keys: List[str] = [
             "source_type",
             "source_path",
             "expected_schema",
             # optional: "transform_mode",
             # optional: "transform_output_path",
+            # optional: "strict_mode",
         ]
 
     def get_class_label(self) -> str:
@@ -22,6 +24,9 @@ class ConnectorManager:
 
     def get(self, key: str) -> Optional[Any]:
         return self.source_data_connector.get(key)
+
+    def is_strict_mode(self) -> bool:
+        return self.strict_mode
 
     def validate_keys(self) -> bool:
         missing_keys: List[str] = [key for key in self.required_keys if key not in self.source_data_connector]

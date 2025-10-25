@@ -69,8 +69,15 @@ class CoordinatorAgent(BaseAgent):
     def report_final_status(self) -> None:
         final_statuses: List[str] = [str(task.get("task_status")) for task in self.agent_context.workflow_plan_state.workflow_tasks]
 
-        if all(status == AgentTaskResult.SUCCESS.value for status in final_statuses):
-            self.log_and_update_dashboard("🎉 FINISHED: No failed or unfinished tasks.")
+        success_count = final_statuses.count(AgentTaskResult.SUCCESS.value)
+        warning_count = final_statuses.count(AgentTaskResult.SUCCESS_WITH_WARNINGS.value)
+        failed_count = final_statuses.count(AgentTaskResult.FAILED.value)
+
+        if failed_count == 0 and (success_count > 0 or warning_count > 0):
+            if warning_count > 0:
+                self.log_and_update_dashboard(f"🎉 FINISHED: All tasks attempted. {success_count} completed successfully, {warning_count} completed with warnings.")
+            else:
+                self.log_and_update_dashboard("🎉 FINISHED: All tasks completed successfully.")
         else:
             failed_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") == AgentTaskResult.FAILED.value]
             unfinished_tasks: List[str] = [str(task.get("task_name")) for task in self.agent_context.workflow_plan_state.workflow_tasks if task.get("task_status") in [AgentTaskResult.PENDING.value, AgentTaskResult.IN_PROGRESS.value, AgentTaskResult.RETRIED.value]]
@@ -96,7 +103,9 @@ class CoordinatorAgent(BaseAgent):
                     self.log_and_update_dashboard(f"⚠️ WARNING: Dependency check failed for task '{task.get('task_name')}': Dependent task '{dependent_task_name}' not found in workflow state.")
                     return False
 
-                if dependent_task.get("task_status") != AgentTaskResult.SUCCESS.value:
+                dependent_task_status = dependent_task.get("task_status")
+                # Accept both SUCCESS and SUCCESS_WITH_WARNINGS as valid completion states
+                if dependent_task_status not in [AgentTaskResult.SUCCESS.value, AgentTaskResult.SUCCESS_WITH_WARNINGS.value]:
                     return False
 
             return True
@@ -170,16 +179,29 @@ class CoordinatorAgent(BaseAgent):
                 if agent_method:
                     result = agent_method()
 
-            if hasattr(result, 'value') and hasattr(result, 'is_success'):
-                # Method returned TaskResult enum
+            if isinstance(result, AgentTaskResult):
+                # Method returned AgentTaskResult enum
+                success = result.is_success
+                task_status = result.value
+            elif hasattr(result, 'value') and hasattr(result, 'is_success'):
+                # Method returned TaskResult enum (fallback for other enum types)
                 success = result.is_success
                 task_status = result.status_string
             elif isinstance(result, bool):
                 # Method returned boolean (for backward compatibility)
                 success = result
                 task_status = AgentTaskResult.SUCCESS.value if result else AgentTaskResult.FAILED.value
+            elif hasattr(result, '_bourne_status') or hasattr(result, 'bourne_status'):
+                # Method returned data with status metadata (e.g., DataTransformationAgent)
+                bourne_status = getattr(result, 'bourne_status', None) or getattr(result, '_bourne_status', None)
+                if bourne_status:
+                    success = bourne_status.is_success
+                    task_status = bourne_status.value
+                else:
+                    success = bool(result)
+                    task_status = AgentTaskResult.SUCCESS.value if success else AgentTaskResult.FAILED.value
             else:
-                # Fallback for other return types
+                # Fallback for other return types (like data transformation returning lists)
                 success = bool(result)
                 task_status = AgentTaskResult.SUCCESS.value if success else AgentTaskResult.FAILED.value
 
