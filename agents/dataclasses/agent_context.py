@@ -1,5 +1,6 @@
 
 from dataclasses import dataclass
+from typing import Optional
 
 from rich.live import Live
 
@@ -13,6 +14,6 @@ from core.workflow_manager import WorkflowManager
 class AgentContext:
     logger: Logger
     dashboard: Dashboard
-    dashboard_state: Live
+    dashboard_state: Optional[Live]
     workflow_plan_state: WorkflowManager
     source_data_connector_state: ConnectorManager

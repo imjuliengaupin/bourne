@@ -139,7 +139,7 @@ class DataTransformationAgent(BaseAgent):
             current_schema: Dict[str, Union[str, Dict[str, Any], List[Any]]] = self.agent_context.source_data_connector_state.get("expected_schema") or {}
 
             # Apply transformation-specific schema changes
-            transformed_schema: Dict[str, str] = self.apply_schema_transformation(current_schema)
+            transformed_schema: Dict[str, Union[str, Dict[str, Any], List[Any]]] = self.apply_schema_transformation(current_schema)
 
             # Add transformation metadata fields (regardless of transformation type)
             transformed_schema["is_transformed"] = "bool"
@@ -154,7 +154,7 @@ class DataTransformationAgent(BaseAgent):
         except Exception as e:
             self.log_and_update_dashboard(f"⚠️ WARNING: Failed to update schema for transformed data validation.\n{e}")
 
-    def transform_single_key(self, key: str, transformation_mode: str) -> str:
+    def transform_single_key(self, key: str, transformation_mode: Optional[str]) -> str:
         if not transformation_mode:
             return key
 

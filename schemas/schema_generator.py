@@ -24,7 +24,7 @@ class SchemaGenerator:
         model_config: ClassVar[ConfigDict] = ConfigDict(populate_by_name=True)
 
     @classmethod
-    def create_record_model(cls, expected_schema: Dict[str, str]) -> Type[BaseModel]:
+    def create_record_model(cls, expected_schema: Dict[str, Union[str, Dict[str, Any], List[Any]]]) -> Type[BaseModel]:
         fields: Dict[str, Tuple[Type[Any], Any]] = {}
 
         for field_name, field_type in expected_schema.items():
@@ -43,7 +43,8 @@ class SchemaGenerator:
                     fields[field_name.lower()] = (List[primitive_type], Field(alias=field_name))
 
             else:
-                python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(field_type.lower())
+                # field_type is a string here
+                python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(str(field_type).lower())
 
                 if python_type:
                     fields[field_name.lower()] = (python_type, Field(alias=field_name))
@@ -65,7 +66,7 @@ class SchemaGenerator:
         return model
 
     @classmethod
-    def create_nested_record_model(cls, parent_field_name: str, nested_schema: Dict[str, str]) -> Type[BaseModel]:
+    def create_nested_record_model(cls, parent_field_name: str, nested_schema: Dict[str, Union[str, Dict[str, Any], List[Any]]]) -> Type[BaseModel]:
         nested_fields: Dict[str, Tuple[Type[Any], Any]] = {}
 
         for nested_field_name, nested_field_type in nested_schema.items():
@@ -86,7 +87,8 @@ class SchemaGenerator:
                     nested_fields[nested_field_name.lower()] = (List[primitive_type], Field(alias=nested_field_name))
 
             else:
-                python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(nested_field_type.lower())
+                # nested_field_type is a string here
+                python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(str(nested_field_type).lower())
 
                 if python_type:
                     nested_fields[nested_field_name.lower()] = (python_type, Field(alias=nested_field_name))

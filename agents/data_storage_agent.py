@@ -22,11 +22,11 @@ class DataStorageAgent(BaseAgent):
     def save_data(self, shared_input_data: List[Dict[str, Any]]) -> bool:
         if not shared_input_data:
             self.log_and_update_dashboard("⚠️ WARNING: No data provided.")
-            return False
+            return True
 
         if not self.transform_output_path:
             self.log_and_update_dashboard("⚠️ WARNING: No transformation output path specified, skipping data save operation.")
-            return False
+            return True
 
         try:
             output_path: Path = Path(self.transform_output_path)

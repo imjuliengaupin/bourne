@@ -84,7 +84,11 @@ class DataValidationAgent(BaseAgent):
 
         try:
             pydantic_compatible_schema: Dict[str, str] = self.convert_complex_schema_to_simple(raw_expected_schema)
-            self.pydantic_record_model = SchemaGenerator.create_record_model(pydantic_compatible_schema)
+            # Convert simple schema back to complex format for create_record_model
+            complex_schema_for_pydantic: Dict[str, Union[str, Dict[str, Any], List[Any]]] = {
+                k: v for k, v in pydantic_compatible_schema.items()
+            }
+            self.pydantic_record_model = SchemaGenerator.create_record_model(complex_schema_for_pydantic)
 
             pydantic_schema_summary: List[str] = self.get_schema_summary(raw_expected_schema)
             self.log_and_update_dashboard(f"ℹ️ INFO: Created a dynamic Pydantic schema using enhanced nested support for the 'expected_schema' fields: {pydantic_schema_summary}.")
@@ -179,7 +183,7 @@ class DataValidationAgent(BaseAgent):
         if not validated_input_data:
             return "No schema fields validated."
 
-        sample_record: Dict[str, Any] = validated_input_data[0]
+        sample_record: BaseModel = validated_input_data[0]
         schema_field_count = len(sample_record.model_fields) if hasattr(sample_record, "model_fields") else len(sample_record.__dict__)
 
         return f"Schema fields validated (per record): {schema_field_count}."
@@ -331,7 +335,7 @@ class DataValidationAgent(BaseAgent):
                     errors.append(f"{field_path}: Expected array, got {type(actual_value).__name__}")
                 elif actual_value:  # Non-empty array
                     # Validate array items if they are objects
-                    for i, item in enumerate(actual_value):
+                    for item in actual_value:
                         if isinstance(item, dict):
                             # For nested objects in arrays, we'd need the nested schema
                             # For now, just validate it's a dict

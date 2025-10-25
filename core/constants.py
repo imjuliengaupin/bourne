@@ -27,12 +27,12 @@ class AgentTaskResult(Enum):
     This replaces simple boolean returns with status-aware results that
     reflect the actual outcome including warnings and partial failures.
     """
-    PENDING: str = "PENDING"
-    IN_PROGRESS: str = "IN PROGRESS"
-    SUCCESS: str = "SUCCESS"
-    SUCCESS_WITH_WARNINGS: str = "WARNING"
-    FAILED: str = "FAILED"
-    RETRIED: str = "RETRIED"
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN PROGRESS"
+    SUCCESS = "SUCCESS"
+    SUCCESS_WITH_WARNINGS = "WARNING"
+    FAILED = "FAILED"
+    RETRIED = "RETRIED"
 
     def __bool__(self) -> bool:
         """Allow AgentTaskResult to be used in boolean contexts"""

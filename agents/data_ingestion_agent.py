@@ -23,6 +23,9 @@ class DataIngestionAgent(BaseAgent):
 
         try:
             if self.source_type == constants.LOCAL_FILE_TYPE and self.source_path is not None:
+                # TODO: Review if there is a better way to handle this manual assertion
+                # Type assertion: we've already checked that source_type is not None
+                assert self.source_type is not None
                 return self.ingest_local_file(self.source_type, self.source_path)
             else:
                 self.log_and_update_dashboard(f"❌ FAILURE: Unknown source data connector specified: '{self.source_type}'. Supported source data connectors: {self.supported_connectors}.")
