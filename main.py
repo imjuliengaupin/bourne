@@ -1,3 +1,24 @@
+"""**Bourne: Agentic Data Processing Pipeline**
+
+Entry point for the data processing workflow system. Coordinates agents to ingest, validate, transform, and store data based on configurable workflows and connectors.
+
+## Usage
+
+```bash
+python main.py --workflow path/to/workflow.json --connector path/to/connector.json
+# or
+python main.py --workflow path/to/workflow.json --connector path/to/connector.json --debug
+```
+
+## Architecture
+
+The system uses an **agent-based architecture** where specialized agents handle different aspects of data processing:
+- `DataIngestionAgent`: Loads data from various sources
+- `DataValidationAgent`: Validates data against expected schemas
+- `DataTransformationAgent`: Transforms data based on configurations set
+- `DataStorageAgent`: Saves processed data to specified outputs
+- `CoordinatorAgent`: Orchestrates the workflow execution based on task dependencies
+"""
 
 import json
 from argparse import ArgumentParser, Namespace
@@ -20,6 +41,13 @@ from core.workflow_manager import WorkflowManager
 
 
 def main(workflow: str, connector: str, debug: bool) -> None:
+    """**Main entry point** that initializes the system components and runs the workflow based on the provided configuration files.
+
+    Args:
+        workflow: Path to workflow configuration JSON file
+        connector: Path to data connector configuration JSON file
+        debug: Enable Rich dashboard and real-time logging
+    """
     logger: Logger = Logger(max_logs=15, debug_mode_enabled=debug)
     dashboard: Dashboard = Dashboard(logger)
 
@@ -53,6 +81,14 @@ def main(workflow: str, connector: str, debug: bool) -> None:
 
 
 def setup_agents(agent_context: AgentContext) -> Dict[str, BaseAgent]:
+    """Creates instances of all **data processing agents** with shared context. Each agent specializes in a specific aspect of the data pipeline.
+
+    Args:
+        agent_context: Shared context containing logger, dashboard, and state managers
+
+    Returns:
+        Dict mapping agent names to initialized agent instances
+    """
     return {
         "DataIngestionAgent": DataIngestionAgent(agent_context),
         "DataValidationAgent": DataValidationAgent(agent_context),
@@ -62,18 +98,31 @@ def setup_agents(agent_context: AgentContext) -> Dict[str, BaseAgent]:
 
 
 def is_workflow_ready(agent_context: AgentContext, workflow_plan: Optional[List[Dict[str, Any]]], source_data_connector: Optional[Dict[str, Any]]) -> bool:
+    """Performs **comprehensive validation** of both workflow and connector configurations before starting the processing pipeline.
+
+    Args:
+        agent_context: Shared context containing logger, dashboard, and state managers
+        workflow_plan: Loaded workflow configuration (or None if invalid)
+        source_data_connector: Loaded connector configuration (or None if invalid)
+
+    Returns:
+        True if configurations are valid and workflow can proceed
+
+    Note:
+        Automatically detects **complex nested schemas** and logs appropriate info messages.
+    """
     if workflow_plan is None or source_data_connector is None:
-        if agent_context.logger.debug_mode_enabled and hasattr(agent_context, 'dashboard_state') and agent_context.dashboard_state:
+        if agent_context.logger.debug_mode_enabled and hasattr(agent_context, "dashboard_state") and agent_context.dashboard_state:
             agent_context.dashboard_state.update(agent_context.dashboard.render([], agent_context.logger.get_logs()))
         return False
 
     if not agent_context.workflow_plan_state.validate_keys_and_load_workflow_tasks(workflow_plan):
-        if agent_context.logger.debug_mode_enabled and hasattr(agent_context, 'dashboard_state') and agent_context.dashboard_state:
+        if agent_context.logger.debug_mode_enabled and hasattr(agent_context, "dashboard_state") and agent_context.dashboard_state:
             agent_context.dashboard_state.update(agent_context.dashboard.render([], agent_context.logger.get_logs()))
         return False
 
     if not agent_context.source_data_connector_state.validate_keys():
-        if agent_context.logger.debug_mode_enabled and hasattr(agent_context, 'dashboard_state') and agent_context.dashboard_state:
+        if agent_context.logger.debug_mode_enabled and hasattr(agent_context, "dashboard_state") and agent_context.dashboard_state:
             agent_context.dashboard_state.update(agent_context.dashboard.render([], agent_context.logger.get_logs()))
         return False
 
@@ -86,6 +135,15 @@ def is_workflow_ready(agent_context: AgentContext, workflow_plan: Optional[List[
 
 
 def load_json(logger: Logger, path: Union[str, Path]) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
+    """**Safely loads** JSON files with comprehensive error handling for common issues like missing files, invalid JSON syntax, and unexpected errors.
+
+    Args:
+        logger: Logger instance for error reporting
+        path: File path to JSON configuration
+
+    Returns:
+        Parsed JSON data (or None if loading failed)
+    """
     try:
         with open(path, "r", encoding="utf-8") as file:
             json_content: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = json.load(file)
@@ -112,6 +170,11 @@ def load_json(logger: Logger, path: Union[str, Path]) -> Optional[Union[Dict[str
 
 
 def parse_program_args() -> Namespace:
+    """**Configures argument parser** with sensible defaults for workflow execution. Supports workflow configuration, connector setup, and debug mode activation.
+
+    Returns:
+        Parsed arguments with workflow, connector, and debug settings
+    """
     parser: ArgumentParser = ArgumentParser(
         description="Bourne: Agentic Data Processing Pipeline"
     )

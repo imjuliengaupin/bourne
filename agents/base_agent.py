@@ -9,7 +9,7 @@ from agents.dataclasses.agent_context import AgentContext
 
 
 class BaseAgent(ABC):
-    # NOTE Create abstract methods using the @abstractmethod decorator
+    # Create abstract methods using the @abstractmethod decorator
 
     def __init__(self, agent_context: AgentContext) -> None:
         self.agent_context: AgentContext = agent_context

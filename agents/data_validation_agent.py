@@ -7,8 +7,8 @@ from pydantic import BaseModel, TypeAdapter
 from agents.base_agent import BaseAgent
 from agents.dataclasses.agent_context import AgentContext
 from core.constants import AgentTaskResult, DataTransformationMetadata
-from schemas.fallback_schema_generator import FallbackSchemaGenerator
 from schemas.schema_generator import SchemaGenerator
+from schemas.schema_generator_fallback import FallbackSchemaGenerator
 
 
 class DataValidationAgent(BaseAgent):
@@ -47,7 +47,7 @@ class DataValidationAgent(BaseAgent):
                 num_records: int = len(input_data)
                 self.log_and_update_dashboard(f"▶️ START: Attempting to validate {num_records} record(s) using dynamic Pydantic schema: {self.expected_schema}.")
 
-                # NOTE There is a mypy limitation with tracking self.pydantic_model across method boundaries even though it's properly defined in __init__ and we have a None check above.
+                # NOTE: There is a mypy limitation with tracking self.pydantic_model across method boundaries even though it's properly defined in __init__ and we have a None check above.
                 # This is a known limitation with dynamic Pydantic model creation where mypy cannot statically verify the type of dynamically created models at analysis time.
                 # The type: ignore[name-defined] suppresses this specific mypy error while maintaining type safety elsewhere and proper runtime behavior.
                 pydantic_validator: TypeAdapter[List[BaseModel]] = TypeAdapter(List[self.pydantic_record_model])  # type: ignore[name-defined]
@@ -253,9 +253,9 @@ class DataValidationAgent(BaseAgent):
 
             self.log_and_update_dashboard(f"▶️ START: Attempting to validate {len(input_data)} record(s) using dynamic fallback schema: {raw_expected_schema}")
 
-            fallback_record_model: Optional[Type[BaseModel]] = FallbackSchemaGenerator.create_enhanced_fallback_record_model(raw_expected_schema)
+            fallback_record_model: Optional[Type[BaseModel]] = FallbackSchemaGenerator.create_dynamic_enhanced_fallback_record_model(raw_expected_schema)
 
-            # NOTE There is a mypy limitation with tracking self.pydantic_model across method boundaries even though it's properly defined in __init__ and we have a None check above.
+            # NOTE: There is a mypy limitation with tracking self.pydantic_model across method boundaries even though it's properly defined in __init__ and we have a None check above.
             # This is a known limitation with dynamic Pydantic model creation where mypy cannot statically verify the type of dynamically created models at analysis time.
             # The type: ignore[name-defined] suppresses this specific mypy error while maintaining type safety elsewhere and proper runtime behavior.
             pydantic_validator: TypeAdapter[List[BaseModel]] = TypeAdapter(List[fallback_record_model])  # type: ignore[name-defined]
