@@ -70,17 +70,41 @@ class SchemaGenerator:
 
         for field_name, field_type in expected_schema.items():
             if isinstance(field_type, dict):
-                nested_model: Type[BaseModel] = cls.create_nested_record_model(field_name, field_type)
-                fields[field_name.lower()] = (nested_model, Field(alias=field_name))
+                nested_model_type: Type[BaseModel] = cls.create_nested_record_model(field_name, field_type)
+                fields[field_name.lower()] = (nested_model_type, Field(alias=field_name))
             elif isinstance(field_type, list) and field_type:
                 if isinstance(field_type[0], dict):
                     # Handle array of nested objects: [{"field": "type"}]
-                    nested_model: Type[BaseModel] = cls.create_nested_record_model(f"ParentField_{field_name}", field_type[0])
-                    fields[field_name.lower()] = (List[nested_model], Field(alias=field_name))
+                    array_nested_model_class: Type[BaseModel] = cls.create_nested_record_model(f"ParentField_{field_name}", field_type[0])
+
+                    # NOTE: MyPy limitation with dynamic type creation for List[DynamicType]
+                    #
+                    # Problem:
+                    #   MyPy cannot statically validate List[variable] where the variable contains a dynamically created type.
+                    #   Even though `array_nested_model_class` is correctly typed as `Type[BaseModel]`, mypy's static analysis
+                    #   cannot verify that the runtime type is valid for use as a generic type parameter in List[...].
+                    #
+                    # Why no proper solution exists:
+                    #   1. Dynamic Pydantic models are created at runtime using `create_model()`, making static analysis impossible
+                    #   2. MyPy's type system requires compile-time type knowledge for generic parameters
+                    #   3. Using TypeVar, Generic, or other typing constructs still requires static type definitions
+                    #   4. The `typing.cast()` function doesn't work here as it would cast the value, not the type itself
+                    #
+                    # Runtime behavior:
+                    #   This code works perfectly at runtime because Python's dynamic typing allows List[runtime_type].
+                    #   The type ignore only suppresses mypy's static analysis limitation, not a real type error.
+                    array_type = List[array_nested_model_class]  # type: ignore[valid-type,misc]
+                    fields[field_name.lower()] = (array_type, Field(alias=field_name))
                 else:
                     # Handle array of primitives: ["str"] or ["int"]
-                    primitive_type: Type[Any] = cls.TYPE_MAP.get(str(field_type[0]).lower(), str)
-                    fields[field_name.lower()] = (List[primitive_type], Field(alias=field_name))
+                    array_primitive_class: Type[Any] = cls.TYPE_MAP.get(str(field_type[0]).lower(), str)
+
+                    # NOTE: Same mypy limitation as above, but for primitive types in List[primitive_type]
+                    #
+                    # Even though `array_primitive_class` contains a valid type like `str` or `int`, mypy cannot
+                    # statically verify this because the type is determined at runtime from the TYPE_MAP lookup.
+                    array_type = List[array_primitive_class]  # type: ignore[valid-type,misc]
+                    fields[field_name.lower()] = (array_type, Field(alias=field_name))
             else:
                 # Default field_type is always ["str"] here
                 python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(str(field_type).lower())
@@ -90,16 +114,29 @@ class SchemaGenerator:
                 else:
                     fields[field_name.lower()] = (str, Field(alias=field_name))
 
-        # NOTE: There is a mypy (static type check) limitation with Pydantic's [`create_model()`](https://docs.pydantic.dev/latest/api/main/#pydantic.create_model) method overload system.
+        # NOTE: MyPy limitation with Pydantic's [`create_model()`](https://docs.pydantic.dev/latest/api/main/#pydantic.create_model) method overload system
         #
-        # Analysis:
-        #   The core issue is that mypy is interpreting the arguments as positional instead of keyword-only arguments.
-        #   The method signature clearly shows that after the /, there's a *, which means everything must be keyword-only.
-        #   The problem is that Python's argument unpacking with `**fields` happens before the keyword arguments are processed, so mypy sees it as positional arguments in the wrong order.
-        #   At runtime, Python correctly processes `__base__` as a keyword argument and `**fields` as field definitions, but mypy's static analysis cannot properly infer this argument unpacking pattern.
+        # Problem:
+        #   MyPy cannot properly analyze the complex method signature of `create_model()` when using keyword argument unpacking.
+        #   The method signature: `create_model(model_name, /, *, __base__=None, **field_definitions)` requires
+        #   all arguments after the `*` to be keyword-only, but mypy's static analysis gets confused by the
+        #   combination of `__base__` and `**fields` unpacking.
         #
-        # Temporary Workaround:
-        #   The `type: ignore[call-overload]` suppresses this specific mypy error while maintaining runtime correctness.
+        # Technical Details:
+        #   - `create_model()` has multiple overloads with different parameter patterns
+        #   - MyPy sees `**fields` as positional argument expansion happening before keyword processing
+        #   - The analysis incorrectly assumes arguments are in the wrong order for the overload signatures
+        #   - This is a limitation in mypy's overload resolution, not an actual runtime error
+        #
+        # Why no proper solution exists:
+        #   1. The Pydantic API requires this exact calling pattern for dynamic field injection
+        #   2. Alternative approaches (manual class creation, metaclasses) would be far more complex
+        #   3. MyPy's overload system cannot handle this specific runtime argument unpacking pattern
+        #   4. The function works perfectly at runtime - this is purely a static analysis limitation
+        #
+        # Runtime behavior:
+        #   Python correctly processes `__base__` as a keyword argument and `**fields` as field definitions.
+        #   The `create_model()` function receives exactly what it expects and creates valid Pydantic models.
         model: Type[BaseModel] = create_model(
             'DynamicRecordModel',
             __base__=(cls.ConfiguredBaseModel,),
@@ -146,12 +183,22 @@ class SchemaGenerator:
                 # Handle arrays within nested objects
                 if isinstance(nested_field_type[0], dict):
                     # Handle arrays of nested objects within a already nested object
-                    array_item_model: Type[BaseModel] = cls.create_nested_record_model(f"ParentField_{parent_field_name}_NestedField_{nested_field_name}", nested_field_type[0])
-                    nested_fields[nested_field_name.lower()] = (List[array_item_model], Field(alias=nested_field_name))
+                    nested_array_item_model_class: Type[BaseModel] = cls.create_nested_record_model(f"ParentField_{parent_field_name}_NestedField_{nested_field_name}", nested_field_type[0])
+
+                    # NOTE: Same mypy limitation with dynamic nested model types in arrays
+                    #
+                    # This is the same issue as above but occurs in deeply nested schemas where we have
+                    # arrays of objects within nested objects (e.g., User.Roles[].Permissions[]).
+                    # MyPy cannot statically validate the dynamically created nested model type.
+                    nested_array_type = List[nested_array_item_model_class]  # type: ignore[valid-type,misc]
+                    nested_fields[nested_field_name.lower()] = (nested_array_type, Field(alias=nested_field_name))
                 else:
                     # Handle arrays of primitives within nested objects
-                    primitive_type: Type[Any] = cls.TYPE_MAP.get(str(nested_field_type[0]).lower(), str)
-                    nested_fields[nested_field_name.lower()] = (List[primitive_type], Field(alias=nested_field_name))
+                    nested_primitive_class: Type[Any] = cls.TYPE_MAP.get(str(nested_field_type[0]).lower(), str)
+
+                    # NOTE: Same mypy limitation for primitive arrays in nested contexts
+                    nested_array_type = List[nested_primitive_class]  # type: ignore[valid-type,misc]
+                    nested_fields[nested_field_name.lower()] = (nested_array_type, Field(alias=nested_field_name))
             else:
                 python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(str(nested_field_type).lower())
 
@@ -160,16 +207,20 @@ class SchemaGenerator:
                 else:
                     nested_fields[nested_field_name.lower()] = (str, Field(alias=nested_field_name))
 
-        # NOTE: There is a mypy (static type check) limitation with Pydantic's [`create_model()`](https://docs.pydantic.dev/latest/api/main/#pydantic.create_model) method overload system.
+        # NOTE: Same MyPy limitation with Pydantic's `create_model()` as above, but for nested model creation
         #
-        # Analysis:
-        #   The core issue is that mypy is interpreting the arguments as positional instead of keyword-only arguments.
-        #   The method signature clearly shows that after the /, there's a *, which means everything must be keyword-only.
-        #   The problem is that Python's argument unpacking with `**nested_fields` happens before the keyword arguments are processed, so mypy sees it as positional arguments in the wrong order.
-        #   At runtime, Python correctly processes `__base__` as a keyword argument and `**nested_fields` as field definitions, but mypy's static analysis cannot properly infer this argument unpacking pattern.
+        # Problem:
+        #   Identical to the issue in `create_record_model()` - mypy cannot properly analyze the overloaded
+        #   method signature when using `**nested_fields` unpacking with the `__base__` keyword argument.
         #
-        # Temporary Workaround:
-        #   The `type: ignore[call-overload]` suppresses this specific mypy error while maintaining runtime correctness.
+        # Context-specific details:
+        #   - This occurs during recursive nested model creation for complex schemas
+        #   - The `nested_fields` dict contains dynamically generated field definitions
+        #   - Each nested level may contain further arrays or objects requiring recursive processing
+        #
+        # Runtime behavior:
+        #   Functions identically to the parent method - Python handles the argument unpacking correctly
+        #   and creates properly structured nested Pydantic models with full validation capabilities.
         nested_model: Type[BaseModel] = create_model(
             f'DynamicNested{parent_field_name}RecordModel',
             __base__=(cls.ConfiguredBaseModel,),

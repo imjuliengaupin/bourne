@@ -193,37 +193,37 @@ class DataValidationAgent(BaseAgent):
             lines: List[str] = pydantic_error_message.split('\n')
             field_names: List[str] = []
 
-            for line in lines:
-                line: str = line.strip()
+            for raw_line in lines:
+                stripped_line: str = raw_line.strip()
 
                 # Extract "fieldname" from "index.fieldname" format (e.g. "0.Timestamp")
-                if re.match(r'^\d+\.', line):
-                    parts: List[str] = line.split('.')
+                if re.match(r'^\d+\.', stripped_line):
+                    indexed_parts: List[str] = stripped_line.split('.')
 
-                    if len(parts) > 1 and re.match(r'^[A-Za-z_]\w*$', parts[1]):
-                        field_name: str = parts[1]
+                    if len(indexed_parts) > 1 and re.match(r'^[A-Za-z_]\w*$', indexed_parts[1]):
+                        indexed_field_name: str = indexed_parts[1]
 
                         # Avoid duplicates
-                        if field_name not in field_names:
-                            field_names.append(field_name)
+                        if indexed_field_name not in field_names:
+                            field_names.append(indexed_field_name)
 
                 # Check for direct field names
-                elif re.match(r'^[A-Za-z_]\w*$', line):
+                elif re.match(r'^[A-Za-z_]\w*$', stripped_line):
 
                     # Avoid duplicates
-                    if line not in field_names:
-                        field_names.append(line)
+                    if stripped_line not in field_names:
+                        field_names.append(stripped_line)
 
                 # Check for dot notation (non-numeric prefix)
-                elif '.' in line and not line[0].isdigit():
-                    parts: List[str] = line.split('.')
+                elif '.' in stripped_line and not stripped_line[0].isdigit():
+                    dotted_parts: List[str] = stripped_line.split('.')
 
-                    if len(parts) > 1 and re.match(r'^[A-Za-z_]\w*$', parts[-1]):
-                        field_name: str = parts[-1]
+                    if len(dotted_parts) > 1 and re.match(r'^[A-Za-z_]\w*$', dotted_parts[-1]):
+                        dotted_field_name: str = dotted_parts[-1]
 
                         # Avoid duplicates
-                        if field_name not in field_names:
-                            field_names.append(field_name)
+                        if dotted_field_name not in field_names:
+                            field_names.append(dotted_field_name)
 
             # Extract all error types
             type_pattern = r"(missing|type_error|value_error|required|string_type|int_parsing)"
@@ -253,12 +253,12 @@ class DataValidationAgent(BaseAgent):
 
             self.log_and_update_dashboard(f"▶️ START: Attempting to validate {len(input_data)} record(s) using dynamic fallback schema: {raw_expected_schema}")
 
-            fallback_record_model: Optional[Type[BaseModel]] = FallbackSchemaGenerator.create_dynamic_enhanced_fallback_record_model(raw_expected_schema)
+            fallback_record_model_type: Optional[Type[BaseModel]] = FallbackSchemaGenerator.create_dynamic_enhanced_fallback_record_model(raw_expected_schema)
 
             # NOTE: There is a mypy limitation with tracking self.pydantic_model across method boundaries even though it's properly defined in __init__ and we have a None check above.
             # This is a known limitation with dynamic Pydantic model creation where mypy cannot statically verify the type of dynamically created models at analysis time.
-            # The type: ignore[name-defined] suppresses this specific mypy error while maintaining type safety elsewhere and proper runtime behavior.
-            pydantic_validator: TypeAdapter[List[BaseModel]] = TypeAdapter(List[fallback_record_model])  # type: ignore[name-defined]
+            # The type: ignore[valid-type] suppresses this specific mypy error while maintaining type safety elsewhere and proper runtime behavior.
+            pydantic_validator: TypeAdapter[List[BaseModel]] = TypeAdapter(List[fallback_record_model_type])  # type: ignore[valid-type]
             validated_input_data: List[BaseModel] = pydantic_validator.validate_python(input_data)
             success_summary: str = self.get_validation_success_summary(validated_input_data)
 
