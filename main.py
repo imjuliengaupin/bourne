@@ -61,23 +61,23 @@ def main(workflow: str, connector: str, debug: bool) -> None:
 
     if debug:
         with Live(dashboard.render(workflow_plan_state.get_workflow_tasks(), logger.get_logs()), refresh_per_second=10.0, console=dashboard.console) as dashboard_state:
-            agent_context: AgentContext = AgentContext(logger, dashboard, dashboard_state, workflow_plan_state, source_data_connector_state)
+            debug_agent_context: AgentContext = AgentContext(logger, dashboard, dashboard_state, workflow_plan_state, source_data_connector_state)
 
-            if not is_workflow_ready(agent_context, workflow_plan, source_data_connector):
+            if not is_workflow_ready(debug_agent_context, workflow_plan, source_data_connector):
                 return
 
-            agents: Dict[str, BaseAgent] = setup_agents(agent_context)
-            coordinator_agent: CoordinatorAgent = CoordinatorAgent(agent_context, agents)
-            coordinator_agent.run_workflow()
+            debug_agents: Dict[str, BaseAgent] = setup_agents(debug_agent_context)
+            debug_coordinator_agent: CoordinatorAgent = CoordinatorAgent(debug_agent_context, debug_agents)
+            debug_coordinator_agent.run_workflow()
     else:
-        agent_context: AgentContext = AgentContext(logger, dashboard, None, workflow_plan_state, source_data_connector_state)
+        production_agent_context: AgentContext = AgentContext(logger, dashboard, None, workflow_plan_state, source_data_connector_state)
 
-        if not is_workflow_ready(agent_context, workflow_plan, source_data_connector):
+        if not is_workflow_ready(production_agent_context, workflow_plan, source_data_connector):
             return
 
-        agents: Dict[str, BaseAgent] = setup_agents(agent_context)
-        coordinator_agent: CoordinatorAgent = CoordinatorAgent(agent_context, agents)
-        coordinator_agent.run_workflow()
+        production_agents: Dict[str, BaseAgent] = setup_agents(production_agent_context)
+        production_coordinator_agent: CoordinatorAgent = CoordinatorAgent(production_agent_context, production_agents)
+        production_coordinator_agent.run_workflow()
 
 
 def setup_agents(agent_context: AgentContext) -> Dict[str, BaseAgent]:

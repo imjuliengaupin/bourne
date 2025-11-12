@@ -13,7 +13,7 @@ from schemas.schema_generator import SchemaGenerator
 class ResultWithStatus(list):
     """A list subclass that supports setting status attributes"""
 
-    def __init__(self, data=None):
+    def __init__(self, data: Optional[List[Any]] = None) -> None:
         super().__init__(data or [])
         self.bourne_status: Optional[AgentTaskResult] = None
 
