@@ -1,0 +1,62 @@
+Copyright (c) 2025 Julien Gaupin
+All rights reserved.
+
+This software and associated documentation files (the “Software”) are the
+exclusive property of the copyright holder.
+
+Permission is hereby granted to view the source code for personal,
+non-commercial evaluation purposes only.
+
+-------------------------------------------------------------------------------
+RESTRICTIONS
+-------------------------------------------------------------------------------
+You may NOT, without prior written permission from the copyright holder:
+
+• Copy, reproduce, or distribute the Software
+• Modify, merge, adapt, translate, or create derivative works of the Software
+• Publish or share the Software publicly
+• Use the Software, in whole or in part, for commercial purposes
+• Sell, sublicense, rent, lease, or otherwise exploit the Software
+• Integrate the Software into any product or service offered commercially
+• Use the Software to train machine learning models (including LLMs)
+• Remove or alter copyright or proprietary notices
+
+Any unauthorized use of the Software is strictly prohibited and may result in
+civil and/or criminal penalties.
+
+-------------------------------------------------------------------------------
+NO WARRANTY
+-------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+LIMITATION OF LIABILITY
+-------------------------------------------------------------------------------
+To the maximum extent permitted by law, the copyright holder shall not be
+liable for any indirect, incidental, consequential, special, or exemplary
+damages, including loss of profits, goodwill, or data, even if advised of the
+possibility of such damages.
+
+-------------------------------------------------------------------------------
+NO LICENSE BY ESTOPPEL
+-------------------------------------------------------------------------------
+Nothing in this license shall be interpreted as granting any rights under
+patent, trademark, or other intellectual property laws.
+
+-------------------------------------------------------------------------------
+TERMINATION
+-------------------------------------------------------------------------------
+Any breach of this license automatically terminates your rights to use the
+Software. Upon termination, you must immediately destroy all copies of the
+Software and associated materials.
+
+-------------------------------------------------------------------------------
+CONTACT
+-------------------------------------------------------------------------------
+For licensing inquiries or commercial use, contact:
+https://github.com/imjuliengaupin/bourne/issues/new
