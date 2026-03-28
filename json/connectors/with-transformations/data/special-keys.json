@@ -1,0 +1,7 @@
+{
+  "ID": 1,
+  "CreatedOn": "2099-01-01 00:00:00",
+  "VeryLongKeyNameThatCouldCauseTransformationIssues": "Testing very long key names",
+  "SpecialChars_WithUnderscores": "Testing special character handling",
+  "MixedCASEkey": "Testing mixed case keys"
+}

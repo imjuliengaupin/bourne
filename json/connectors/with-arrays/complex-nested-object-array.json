@@ -2,19 +2,18 @@
   "source_type": "local_file",
   "source_path": "json/connectors/with-arrays/data/complex-nested-object-array.json",
   "expected_schema": {
-    "ObjectArray": [
+    "ID": "int",
+    "CreatedOn": "str",
+    "Items": [
       {
-        "Key": "str",
-        "NestedObjectArray": [
+        "Name": "str",
+        "SubItems": [
           {
-            "Key": "str",
-            "NestedObjectArray": [
+            "Name": "str",
+            "Properties": [
               {
                 "Key": "str",
-                "NestedObject": {
-                  "Key": "str",
-                  "NestedObject": { "Key": "str" }
-                }
+                "Value": "str"
               }
             ]
           }

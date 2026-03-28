@@ -1,8 +1,10 @@
 {
   "ID": 1,
-  "Name": "User1",
-  "Details": {
-    "Personal": { "Age": 21 },
-    "Location": { "City": "City1", "State": "State1" }
+  "CreatedOn": "2099-01-01 00:00:00",
+  "Config": {
+    "Settings": {
+      "Theme": "Dark",
+      "Language": "EN"
+    }
   }
 }

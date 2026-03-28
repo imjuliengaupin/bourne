@@ -1,14 +1,13 @@
 
-import inspect
-from types import FrameType
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, cast
 
+from core.base_utility import IntrospectionMixin
 from core.constants import AgentTaskResult
 from core.logger import Logger
 from core.workflow_task import WorkflowTask
 
 
-class WorkflowManager:
+class WorkflowManager(IntrospectionMixin):
 
     def __init__(self, logger: Logger) -> None:
         self.logger: Logger = logger
@@ -23,17 +22,6 @@ class WorkflowManager:
             # optional: "produces_output",
             # optional: "max_retries",
         ]
-
-    def get_class_label(self) -> str:
-        return type(self).__name__
-
-    def get_caller_method(self) -> str:
-        frame: Optional[FrameType] = inspect.currentframe()
-
-        if frame is not None and frame.f_back is not None:
-            return frame.f_back.f_code.co_name + "()"
-
-        return "unknown_caller_method()"
 
     def get_workflow_tasks(self) -> List[WorkflowTask]:
         return self.workflow_tasks

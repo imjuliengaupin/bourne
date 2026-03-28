@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bourne"
+version = "0.1.0"
+description = "Agentic data processing and workflow management system"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "annotated-types==0.7.0",
+    "markdown-it-py==4.0.0",
+    "mdurl==0.1.2",
+    "pydantic==2.12.4",
+    "pydantic_core==2.41.5",
+    "Pygments==2.19.2",
+    "rich==14.2.0",
+    "typing_extensions==4.15.0",
+    "typing-inspection==0.4.2"
+]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "core*", "schemas*"]
+exclude = ["tests*", "demo*", "json*", "coverage*"]
+
+[project.optional-dependencies]
+test = [
+    "pytest==9.0.1",
+    "pytest-cov==7.0.0",
+    "coverage==7.11.3"
+]
+
+[tool.pytest.ini_options]
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Output and formatting
+addopts = [
+    "-v",                   # verbose output
+    "--tb=short",           # shorter traceback format
+    "--strict-markers",     # require markers to be defined
+    "--disable-warnings",   # disable warnings for cleaner output
+    "--color=yes"           # colored output
+]
+
+# Test markers - must match conftest.py pytest_configure
+markers = [
+    "unit: mark test as a unit test",
+    "integration: mark test as an integration test",
+    "slow: mark test as slow running",
+    "agent: mark test as agent-specific"
+]
+
+# Minimum version requirements
+minversion = "9.0"
+
+# Coverage reporting (if pytest-cov is installed)
+[tool.coverage.run]
+source = ["agents", "core", "schemas"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/conftest.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:"
+]
+show_missing = true
+precision = 2

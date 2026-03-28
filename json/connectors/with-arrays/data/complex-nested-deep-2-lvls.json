@@ -1,11 +1,11 @@
 {
   "ID": 1,
+  "CreatedOn": "2099-01-01 00:00:00",
   "User": {
-    "Details": { "Name": "User1", "Age": 21 },
-    "Roles": [
-      { "Name": "Role1", "RoleID": 1 },
-      { "Name": "Role2", "RoleID": 2 },
-      { "Name": "Role3", "RoleID": 3 }
+    "Profile": { "Username": "User1", "Status": "Active" },
+    "Permissions": [
+      { "Name": "Read", "Level": 1 },
+      { "Name": "Write", "Level": 2 }
     ]
   }
 }

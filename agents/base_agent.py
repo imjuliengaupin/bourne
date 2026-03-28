@@ -1,29 +1,17 @@
 
-import inspect
 import time
 from abc import ABC
-from types import FrameType
 from typing import Any, Dict, Optional
 
 from agents.dataclasses.agent_context import AgentContext
+from core.base_utility import IntrospectionMixin
 
 
-class BaseAgent(ABC):
+class BaseAgent(IntrospectionMixin, ABC):
     # Create abstract methods using the @abstractmethod decorator
 
     def __init__(self, agent_context: AgentContext) -> None:
         self.agent_context: AgentContext = agent_context
-
-    def get_class_label(self) -> str:
-        return type(self).__name__
-
-    def get_caller_method(self) -> str:
-        frame: Optional[FrameType] = inspect.currentframe()
-
-        if frame is not None and frame.f_back is not None:
-            return frame.f_back.f_code.co_name + "()"
-
-        return "unknown_caller_method()"
 
     def log_and_update_dashboard(self, message: Optional[str] = None, data_before_transformation: Optional[Dict[str, Any]] = None, data_after_transformation: Optional[Dict[str, Any]] = None) -> None:
         if message:

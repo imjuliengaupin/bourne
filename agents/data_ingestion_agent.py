@@ -14,18 +14,15 @@ class DataIngestionAgent(BaseAgent):
         super().__init__(agent_context)
         self.source_type: Optional[str] = self.agent_context.source_data_connector_state.get("source_type")
         self.source_path: Optional[str] = self.agent_context.source_data_connector_state.get("source_path")
-        self.supported_connectors: List[str] = [
-            constants.LOCAL_FILE_TYPE,
-        ]
+        self.supported_connectors: List[str] = [constants.LOCAL_FILE_TYPE]
 
     def ingest_data(self) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
         self.log_and_update_dashboard(f"▶️ START: Ingesting data from '{self.source_type}' source: {self.source_path}.")
 
         try:
             if self.source_type == constants.LOCAL_FILE_TYPE and self.source_path is not None:
-                # TODO: Review if there is a better way to handle this manual assertion
-                # Type assertion: we've already checked that source_type is not None
-                assert self.source_type is not None
+                # Type narrowing: source_path already verified as not None above
+                assert self.source_path is not None
                 return self.ingest_local_file(self.source_type, self.source_path)
             else:
                 self.log_and_update_dashboard(f"❌ FAILURE: Unknown source data connector specified: '{self.source_type}'. Supported source data connectors: {self.supported_connectors}.")
@@ -41,7 +38,7 @@ class DataIngestionAgent(BaseAgent):
                 self.log_and_update_dashboard(f"❌ FAILURE: '{source_type}' not found under {source_path}.")
                 return None
 
-            # TODO Add support for other file formats like CSV, Parquet, etc.
+            # NOTE: File format extensibility point - additional formats (CSV, Parquet, etc.) can be added here
             records: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None
 
             with open(source_path, 'r', encoding="utf-8") as file:
@@ -51,13 +48,7 @@ class DataIngestionAgent(BaseAgent):
                     records = json.load(file)
 
             if records is not None:
-                num_records: int = 0
-
-                if isinstance(records, dict):
-                    num_records = 1
-                elif isinstance(records, list):
-                    num_records = len(records)
-
+                num_records: int = 1 if isinstance(records, dict) else len(records) if isinstance(records, list) else 0
                 file_size: int = os.path.getsize(source_path)
 
                 self.log_and_update_dashboard(f"✅ SUCCESS: Ingested {num_records} record(s) ({file_size} bytes) from '{source_type}': {source_path}.")

@@ -2,6 +2,13 @@
   "source_type": "local_file",
   "source_path": "json/connectors/with-arrays/data/object-array.json",
   "expected_schema": {
-    "ObjectArray": [{ "Key": "str" }]
+    "ID": "int",
+    "CreatedOn": "str",
+    "Attributes": [
+      {
+        "Key": "str",
+        "Value": "str"
+      }
+    ]
   }
 }

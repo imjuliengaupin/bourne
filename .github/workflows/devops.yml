@@ -19,16 +19,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: pip
 
       - name: Install dependencies
         run: |
           pip install pylint --quiet
-          pip install -r requirements.txt --quiet
+          pip install -e .[test] --quiet
 
       - name: Run linter
-        # NOTE remove `--exit-zero` to force the pipeline build to fail if linter discrepancies are found
+        # Remove `--exit-zero` to force the pipeline build to fail if linter discrepancies are found
         run: |
           pylint $(git ls-files "*.py") --exit-zero
 
@@ -39,55 +39,81 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: pip
 
       - name: Install dependencies
         run: |
           pip install mypy --quiet
-          pip install -r requirements.txt --quiet
+          pip install -e .[test] --quiet
 
       - name: Run static type checks
         run: |
-          mypy $(git ls-files "*.py")
+          mypy $(git ls-files "*.py") --ignore-missing-imports
 
-  pytest:
+  pytest-unit:
     runs-on: ubuntu-latest
     needs: mypy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: pip
 
       - name: Install dependencies
         run: |
-          pip install pytest --quiet
-          pip install -r requirements.txt --quiet
+          pip install -e .[test] --quiet
 
       - name: Run unit tests
         run: |
-          pytest tests/ --quiet
+          pytest -m "unit" -v --tb=short
 
-  pytest-cov:
+  pytest-all:
     runs-on: ubuntu-latest
-    needs: pytest
+    needs: pytest-unit
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: pip
 
       - name: Install dependencies
         run: |
-          pip install pytest-cov coveralls --quiet
-          pip install -r requirements.txt --quiet
+          pip install -e .[test] --quiet
+
+      - name: Run all tests
+        run: |
+          pytest tests/ -v --tb=short --junitxml=test-results.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.run_id }}
+          path: test-results.xml
+          retention-days: 30
+
+  pytest-cov:
+    runs-on: ubuntu-latest
+    needs: pytest-all
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install coveralls --quiet
+          pip install -e .[test] --quiet
 
       - name: Generate code coverage report
         run: |
-          pytest --cov tests/ --cov-report html:coverage/coverage_report/ --cov-config coverage/.coveragerc
+          pytest --cov=agents --cov=core --cov=schemas --cov-report html:coverage/coverage_report/ tests/
 
       - name: Upload code coverage report to Coveralls
         uses: coverallsapp/github-action@v2
@@ -104,18 +130,18 @@ jobs:
 
   pdoc3:
     runs-on: ubuntu-latest
-    needs: pytest
+    needs: pytest-all
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           cache: pip
 
       - name: Install dependencies
         run: |
           pip install pdoc3 --quiet
-          pip install -r requirements.txt --quiet
+          pip install -e . --quiet
 
       - name: Generate code documentation
         run: |

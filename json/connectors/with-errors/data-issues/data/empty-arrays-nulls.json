@@ -1,0 +1,13 @@
+{
+  "ID": 1,
+  "CreatedOn": "2099-01-01 00:00:00",
+  "Users": [],
+  "Profile": {
+    "Name": null,
+    "Email": "test@example.com",
+    "Settings": {
+      "Theme": null,
+      "Notifications": []
+    }
+  }
+}

@@ -1,9 +1,8 @@
 {
   "ID": 1,
-  "Name": "User1",
-  "Details": {
-    "Age": 21,
-    "City": "City1",
-    "State": "State1"
+  "CreatedOn": "2099-01-01 00:00:00",
+  "Metadata": {
+    "Source": "System",
+    "Owner": "Admin"
   }
 }

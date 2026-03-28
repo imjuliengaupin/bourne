@@ -3,6 +3,6 @@
   "source_path": "json/connectors/with-errors/data/empty-data-structure.json",
   "expected_schema": {
     "ID": "int",
-    "Timestamp": "str"
+    "CreatedOn": "str"
   }
 }

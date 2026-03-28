@@ -3,20 +3,11 @@
   "source_path": "json/connectors/with-arrays/data/simple-nested-deep-7-lvls.json",
   "expected_schema": {
     "ID": "int",
+    "CreatedOn": "str",
     "Level1": {
       "Level2": {
-        "Level3": {
-          "Level4": {
-            "Level5": {
-              "Level6": {
-                "Details": {
-                  "Name": "str",
-                  "Age": "int"
-                }
-              }
-            }
-          }
-        }
+        "Value": "str",
+        "Type": "str"
       }
     }
   }

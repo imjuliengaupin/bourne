@@ -1,0 +1,9 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/with-errors/data-issues/data/empty-arrays-nulls.json",
+  "expected_schema": {
+    "ID": "int",
+    "Users": "list",
+    "Profile": "dict"
+  }
+}

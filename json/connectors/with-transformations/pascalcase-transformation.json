@@ -1,0 +1,11 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/with-transformations/data/transformation-base.json",
+  "expected_schema": {
+    "ID": "int",
+    "CreatedOn": "str"
+  },
+  "transform_mode": "pascal_case_keys",
+  "transform_output_path": "data/outputs/pascalcase_transformed.json",
+  "include_transformation_metadata": true
+}

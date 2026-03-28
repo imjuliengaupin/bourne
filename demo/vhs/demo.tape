@@ -70,7 +70,7 @@ Set Width 1000
 Set Height 800
 
 Type "cd /Users/path/to/bourne" Enter Sleep 2s
-Type "python3 -m venv .venv" Enter Sleep 3s
+Type "python -m venv .venv" Enter Sleep 3s
 Type "source .venv/bin/activate" Enter Sleep 3s
-Type "pip3 install -r requirements.txt" Enter Sleep 8s
-Type "python3 main.py" Enter Sleep 15s
+Type "pip install -e ." Enter Sleep 8s
+Type "python main.py --workflow json/workflows/default/default.json --connector json/connectors/default/single-record.json --debug" Enter Sleep 15s

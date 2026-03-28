@@ -3,15 +3,10 @@
   "source_path": "json/connectors/with-arrays/data/complex-nested-deep-2-lvls.json",
   "expected_schema": {
     "ID": "int",
+    "CreatedOn": "str",
     "User": {
-      "Details": {
-        "Name": "str",
-        "Age": "int"
-      },
-      "Roles": {
-        "Name": "str",
-        "RoleID": "str"
-      }
+      "Profile": { "Username": "str", "Status": "str" },
+      "Permissions": [{ "Name": "str", "Level": "int" }]
     }
   }
 }
