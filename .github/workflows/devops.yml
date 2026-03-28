@@ -145,7 +145,7 @@ jobs:
 
       - name: Generate code documentation
         run: |
-          pdoc --force --html $(git ls-files "*.py") --output-dir docs/
+          pdoc --force --html agents core schemas --output-dir docs/
 
       - name: Upload code documentation artifact
         uses: actions/upload-artifact@v4
