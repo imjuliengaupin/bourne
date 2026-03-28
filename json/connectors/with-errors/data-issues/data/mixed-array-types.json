@@ -1,0 +1,14 @@
+{
+  "ID": 1,
+  "CreatedOn": "2099-01-01 00:00:00",
+  "MixedData": [
+    42,
+    "text_value",
+    {
+      "NestedObject": true,
+      "Value": 3.14
+    },
+    ["nested", "array"],
+    null
+  ]
+}

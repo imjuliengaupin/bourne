@@ -2,26 +2,30 @@
   "source_type": "local_file",
   "source_path": "json/connectors/with-transformations/data/complex-array-transformation.json",
   "transform_mode": "uppercase_keys",
+  "transform_output_path": "data/outputs/complex_array_transformed.json",
+  "include_transformation_metadata": true,
   "expected_schema": {
-    "Departments": [
-      {
-        "DepartmentName": "str",
-        "Teams": [
-          {
-            "TeamName": "str",
-            "Members": [
-              {
-                "EmployeeInfo": {
-                  "PersonalDetails": {
+    "ID": "int",
+    "CreatedOn": "str",
+    "Organization": {
+      "Departments": [
+        {
+          "DepartmentName": "str",
+          "Teams": [
+            {
+              "TeamName": "str",
+              "Members": [
+                {
+                  "Employee": {
                     "FirstName": "str",
                     "Skills": ["str"]
                   }
                 }
-              }
-            ]
-          }
-        ]
-      }
-    ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   }
 }

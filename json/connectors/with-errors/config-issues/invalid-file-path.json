@@ -3,6 +3,6 @@
   "source_path": "nonexistent/path/to/data.json",
   "expected_schema": {
     "ID": "int",
-    "Timestamp": "str"
+    "CreatedOn": "str"
   }
 }

@@ -1,10 +1,11 @@
 
 from typing import Any, Dict, List, Optional
 
+from core.base_utility import IntrospectionMixin
 from core.logger import Logger
 
 
-class ConnectorManager:
+class ConnectorManager(IntrospectionMixin):
 
     def __init__(self, logger: Logger, source_data_connector: Optional[Dict[str, Any]]) -> None:
         self.logger: Logger = logger
@@ -14,13 +15,11 @@ class ConnectorManager:
             "source_type",
             "source_path",
             "expected_schema",
-            # optional: "transform_mode",
-            # optional: "transform_output_path",
-            # optional: "strict_mode",
+            # optional: "transform_mode"
+            # optional: "transform_output_path"
+            # optional: "include_transformation_metadata"
+            # optional: "strict_mode"
         ]
-
-    def get_class_label(self) -> str:
-        return type(self).__name__
 
     def get(self, key: str) -> Optional[Any]:
         return self.source_data_connector.get(key)

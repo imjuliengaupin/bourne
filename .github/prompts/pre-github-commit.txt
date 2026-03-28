@@ -1,0 +1,106 @@
+## PRE-COMMIT CODE REVIEW - BOURNE DATA PROCESSING FRAMEWORK
+
+BEFORE ANALYSIS, verify locally:
+```bash
+pytest -v --tb=short                   # Expect 100% pass rate
+mypy $(git ls-files "*.py")            # Expect 100% compliance
+python tests/run_scenarios.py          # Expect 100% pass rate
+git status                             # Review staged changes
+```
+
+ANALYSIS SCOPE:
+Review all Python files in the bourne codebase for logic correctness, patterns, consistency, and readiness for commit.
+
+METHODOLOGY (to prevent hallucinations):
+- Quote EXACT line numbers and code content when identifying issues
+- Use read_file to verify code; make no assumptions
+- State explicitly when files/sections need inspection but aren't visible
+- Report only verified issues; exclude correct code
+- Categorize findings: critical (must-fix), improvements (should-fix), suggestions (nice-to-have)
+- End by asking if detailed commit message should be provided
+
+WORKSPACE: The root directory of bourne repository. Identify by: pyproject.toml, main.py, agents/, core/, schemas/, tests/, json/ folders, .github/prompts/
+
+## CODE QUALITY & TYPE SAFETY
+- [ ] Read mypy output to identify any remaining type annotation issues
+- [ ] Verify dynamic Pydantic model generation in schema_generator.py handles all edge cases
+- [ ] Check key_transformer.py for proper circular dependency resolution
+- [ ] Scan for unused imports across all agent files
+- [ ] Verify all functions have proper type hints (especially return types)
+- [ ] Check for inconsistent naming patterns (camelCase vs snake_case)
+
+## TESTING & VALIDATION
+- [ ] Verify pytest reports 100% pass rate (test_data_ingestion_agent.py)
+- [ ] Verify mypy analysis reports 100% compliance with 0 type errors
+- [ ] Confirm run_scenarios.py successfully auto-discovers all connector scenarios
+- [ ] Check that all scenarios pass at 100% rate (default, arrays, nested, complex, strict-mode, transformations, errors)
+- [ ] Review test data consistency: all CreatedOn fields = "2099-01-01 00:00:00"
+- [ ] Verify transformation modes tested: lowercase, uppercase, snake_case, normalize
+- [ ] Confirm edge cases covered: empty arrays, null values, deep nesting (Level1→Level2)
+- [ ] Check that conftest.py fixtures are used correctly in all tests
+
+## ARCHITECTURE & DEPENDENCIES
+- [ ] Review base_agent.py: verify abstract methods and initialization
+- [ ] Check agent initialization order: DataIngestionAgent → DataValidationAgent → DataTransformationAgent → DataStorageAgent
+- [ ] Verify workflow_manager.py task dependency graph matches connector JSON structures
+- [ ] Confirm schema validation cascade: Primary (schema_generator.py) → Fallback (schema_generator_fallback.py) → Manual (schema_generator_fallback_manual.py)
+- [ ] Validate shared_input_data flows correctly through AgentContext
+- [ ] Check for any missing error handling in agent chains
+
+## SCHEMA MANAGEMENT
+- [ ] Verify schema_generator.py create_record_model() correctly handles dynamic field types
+- [ ] Check that KeyTransformer in schemas/key_transformer.py is properly imported (not agents module)
+- [ ] Confirm transformation modes update schema correctly (e.g., key name transformations)
+- [ ] Validate fallback generators (schema_generator_fallback.py, schema_generator_fallback_manual.py) generate schemas consistent with primary
+- [ ] Check infer_nested_schema_from_data() handles nested objects and arrays
+- [ ] Verify schema caching doesn't cause stale schemas in multi-scenario runs
+
+## INTEGRATION POINTS
+- [ ] Review agent_context.py: verify all fields are initialized and properly typed
+- [ ] Check shared_input_data is passed correctly from one agent to next
+- [ ] Verify coordinator_agent.py orchestrates all agents in correct sequence
+- [ ] Confirm dashboard.py receives updates from all agents (ingest, validate, transform, store)
+- [ ] Check logger.py is consistently imported across all agents
+- [ ] Validate workflow_task.py executes tasks in dependency order
+
+## FILE ORGANIZATION & CLEANUP
+- [ ] Verify coverage/ folder structure: .coveragerc config file present, coverage_report/ generated on demand
+- [ ] Confirm all JSON connectors follow structure: connector-config.json + data/*.json
+- [ ] Check demo/ folder has setup documentation (setup_workflow_plan.txt, setup_source_data_connector.txt)
+- [ ] Verify json/connectors/common-schema-reference.json DELETED (no longer needed)
+- [ ] Confirm .coverage file DELETED from root (binary artifact)
+- [ ] Check .gitignore properly ignores: .coverage, .coverage.*, coverage/ folder, __pycache__/
+- [ ] Verify no orphaned files (old reference schemas, deprecated configs)
+
+## ERROR HANDLING & EDGE CASES
+- [ ] Check base_agent.py for exception handling in execute() methods
+- [ ] Verify graceful degradation: validation skips when data invalid, transform skips on bad config
+- [ ] Review error messages in all agents for clarity (include context, not just generic messages)
+- [ ] Check connector_manager.py handles missing files and invalid JSON gracefully
+- [ ] Verify workflow_manager.py handles task failures without breaking pipeline
+- [ ] Validate that error scenarios (with-errors/ connectors) are caught and reported
+- [ ] Check for any unhandled exceptions in schema generation fallbacks
+
+## DOCUMENTATION & CODE COMMENTS
+- [ ] Search for all `# type: ignore` comments - verify they're necessary (especially in schema_generator.py)
+- [ ] Check docstrings in all agent classes (purpose, parameters, return types)
+- [ ] Verify workflow_manager.py has clear comments explaining task dependency resolution
+- [ ] Confirm README.md updated with run_scenarios.py usage instructions
+- [ ] Check that complex logic (e.g., schema inference, key transformation) has inline comments
+- [ ] Verify constants.py documents all transformation modes and status values
+
+## CONSTANTS & CONFIGURATION
+- [ ] Review core/constants.py: verify all transformation modes exist (lowercase, uppercase, snake_case, normalize)
+- [ ] Check status constants (PENDING, PROCESSING, COMPLETED, FAILED, SKIPPED) used consistently across agents
+- [ ] Verify connector configs validate required fields (workflow_structure, source, destination)
+- [ ] Confirm optional fields have defaults (transformation_mode defaults to "lowercase")
+- [ ] Check that invalid configuration values are caught early (not runtime errors)
+- [ ] Validate configuration merging (defaults + user config)
+
+## PERFORMANCE & BEST PRACTICES
+- [ ] Check for unnecessary list/dict copies in data transformation loops
+- [ ] Verify schema caching doesn't cause memory bloat in run_scenarios.py (test with full scenario suite)
+- [ ] Review separation of concerns: agents focused on single responsibility (ingest, validate, transform, store)
+- [ ] Confirm no tight coupling between agents (all communication through AgentContext)
+- [ ] Check workflow_task_queue.py for efficient task scheduling (no busy-wait loops)
+- [ ] Validate that large JSON files don't load entirely into memory unnecessarily

@@ -1,10 +1,11 @@
 {
   "source_type": "local_file",
-  "source_path": "json/connectors/with-transformations/data/snakecase-transformation.json",
+  "source_path": "json/connectors/with-transformations/data/transformation-base.json",
   "expected_schema": {
     "ID": "int",
     "CreatedOn": "str"
   },
   "transform_mode": "snake_case_keys",
-  "transform_output_path": "data/outputs/camelcase_to_snakecase_transformed.json"
+  "transform_output_path": "data/outputs/snakecase_transformed.json",
+  "include_transformation_metadata": true
 }

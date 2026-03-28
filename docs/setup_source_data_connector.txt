@@ -11,7 +11,7 @@
   // 2. Source Data Path
   // Path to your input data file or directory.
   // Supported formats: json, ndjson
-  // Required when: source_type = "local_file"
+  // Required: Always needed (currently only local_file connector supported)
   "source_path": "",
 
   // 3. Expected Data Schema
@@ -33,7 +33,7 @@
 
   // 4. Data Transformation Mode
   // Choose which transformation to apply during processing.
-  // Supported modes: lowercase_keys
+  // Supported modes: lowercase_keys, uppercase_keys, snake_case_keys, camel_case_keys, pascal_case_keys, normalize_types
   // Leave empty to skip transformation
   "transform_mode": "",
 
@@ -41,5 +41,17 @@
   // Path where transformed/processed data will be saved.
   // Supported formats: json, ndjson
   // Required when: transform_mode is specified
-  "transform_output_path": ""
+  "transform_output_path": "",
+
+  // 6. Include Transformation Metadata
+  // Add is_transformed and transformed_on fields to output data.
+  // Default: false (metadata fields are NOT added unless explicitly enabled)
+  // Set to true to include metadata in transformed output
+  // Note: Metadata keys automatically align with the transform_mode casing
+  "include_transformation_metadata": false
+
+  // 7. Strict Mode
+  // Enforce required optional configs (e.g., transform_mode, transform_output_path) and fail fast on missing data
+  // Default: false (warnings instead of hard failures for missing optional configs)
+  "strict_mode": false
 }

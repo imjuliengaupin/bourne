@@ -1,29 +1,17 @@
 
-import inspect
 from collections import deque
-from types import FrameType
 from typing import Deque, Optional
 
+from core.base_utility import IntrospectionMixin
 from core.logger import Logger
 from core.workflow_task import WorkflowTask
 
 
-class WorkflowTaskQueue:
+class WorkflowTaskQueue(IntrospectionMixin):
 
     def __init__(self, logger: Logger) -> None:
         self.logger: Logger = logger
         self.workflow_tasks: Deque[WorkflowTask] = deque()
-
-    def get_class_label(self) -> str:
-        return type(self).__name__
-
-    def get_caller_method(self) -> str:
-        frame: Optional[FrameType] = inspect.currentframe()
-
-        if frame is not None and frame.f_back is not None:
-            return frame.f_back.f_code.co_name + "()"
-
-        return "unknown_caller_method()"
 
     def get_size(self) -> int:
         try:

@@ -1,19 +1,16 @@
 {
-  "ObjectArray": [
+  "ID": 1,
+  "CreatedOn": "2099-01-01 00:00:00",
+  "Items": [
     {
-      "Key": "Value",
-      "NestedObjectArray": [
+      "Name": "Item1",
+      "SubItems": [
         {
-          "Key": "Value",
-          "NestedObjectArray": [
+          "Name": "SubItem1",
+          "Properties": [
             {
-              "Key": "Value",
-              "NestedObject": {
-                "Key": "Value",
-                "NestedObject": {
-                  "Key": "Value"
-                }
-              }
+              "Key": "Color",
+              "Value": "Blue"
             }
           ]
         }

@@ -1,0 +1,24 @@
+{
+  "ID": 1,
+  "CreatedOn": "2099-01-01 00:00:00",
+  "Organization": {
+    "Departments": [
+      {
+        "DepartmentName": "Engineering",
+        "Teams": [
+          {
+            "TeamName": "Backend",
+            "Members": [
+              {
+                "Employee": {
+                  "FirstName": "Alice",
+                  "Skills": ["Python", "Java"]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "source_type": "local_file",
+  "source_path": "json/connectors/with-transformations/data/special-keys.json",
+  "expected_schema": {
+    "ID": "int",
+    "CreatedOn": "str",
+    "VeryLongKeyNameThatCouldCauseTransformationIssues": "str",
+    "SpecialChars_WithUnderscores": "str",
+    "MixedCASEkey": "str"
+  },
+  "transform_mode": "lowercase_keys",
+  "transform_output_path": "data/outputs/special_keys_transformed.json",
+  "include_transformation_metadata": true
+}

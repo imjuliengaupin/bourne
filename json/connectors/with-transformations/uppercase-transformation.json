@@ -1,10 +1,11 @@
 {
   "source_type": "local_file",
-  "source_path": "json/connectors/with-transformations/data/single-record.json",
+  "source_path": "json/connectors/with-transformations/data/transformation-base.json",
   "expected_schema": {
     "ID": "int",
-    "Timestamp": "str"
+    "CreatedOn": "str"
   },
   "transform_mode": "uppercase_keys",
-  "transform_output_path": "data/outputs/uppercase_transformed.json"
+  "transform_output_path": "data/outputs/uppercase_transformed.json",
+  "include_transformation_metadata": true
 }

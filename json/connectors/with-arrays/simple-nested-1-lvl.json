@@ -3,11 +3,10 @@
   "source_path": "json/connectors/with-arrays/data/simple-nested-1-lvl.json",
   "expected_schema": {
     "ID": "int",
-    "Name": "str",
-    "Details": {
-      "Age": "int",
-      "City": "str",
-      "State": "str"
+    "CreatedOn": "str",
+    "Metadata": {
+      "Source": "str",
+      "Owner": "str"
     }
   }
 }

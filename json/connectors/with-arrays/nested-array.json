@@ -2,6 +2,8 @@
   "source_type": "local_file",
   "source_path": "json/connectors/with-arrays/data/nested-array.json",
   "expected_schema": {
-    "NestedArray": [["str"]]
+    "ID": "int",
+    "CreatedOn": "str",
+    "NestedTags": [["str"]]
   }
 }

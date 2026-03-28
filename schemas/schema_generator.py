@@ -11,12 +11,18 @@ Generates Pydantic models dynamically from JSON schema definitions, supporting *
 - **Schema transformation** with various key naming conventions
 """
 
-import re
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type, Union
+from typing import (TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple,
+                    Type, Union)
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
-from core import constants
+from schemas.schema_key_transformer import SchemaKeyTransformer
+
+# NOTE: TYPE_CHECKING guard to avoid circular imports at runtime while supporting
+# type-only imports for static analysis. The if block is a placeholder for future
+# type aliases or Protocol definitions that don't need to execute at runtime.
+if TYPE_CHECKING:
+    pass
 
 
 class SchemaGenerator:
@@ -77,23 +83,24 @@ class SchemaGenerator:
                     # Handle array of nested objects: [{"field": "type"}]
                     array_nested_model_class: Type[BaseModel] = cls.create_nested_record_model(f"ParentField_{field_name}", field_type[0])
 
-                    # NOTE: MyPy limitation with dynamic type creation for List[DynamicType]
+                    # NOTE: Static type checker limitation with dynamic type creation for List[DynamicType]
                     #
                     # Problem:
-                    #   MyPy cannot statically validate List[variable] where the variable contains a dynamically created type.
-                    #   Even though `array_nested_model_class` is correctly typed as `Type[BaseModel]`, mypy's static analysis
+                    #   Static type checkers cannot validate List[variable] where the variable contains a dynamically created type.
+                    #   Even though `array_nested_model_class` is correctly typed as `Type[BaseModel]`, static analysis
                     #   cannot verify that the runtime type is valid for use as a generic type parameter in List[...].
                     #
                     # Why no proper solution exists:
                     #   1. Dynamic Pydantic models are created at runtime using `create_model()`, making static analysis impossible
-                    #   2. MyPy's type system requires compile-time type knowledge for generic parameters
+                    #   2. Static type systems require compile-time type knowledge for generic parameters
                     #   3. Using TypeVar, Generic, or other typing constructs still requires static type definitions
                     #   4. The `typing.cast()` function doesn't work here as it would cast the value, not the type itself
                     #
                     # Runtime behavior:
                     #   This code works perfectly at runtime because Python's dynamic typing allows List[runtime_type].
-                    #   The type ignore only suppresses mypy's static analysis limitation, not a real type error.
+                    #   The type ignore only suppresses static analysis limitation, not a real type error.
                     array_type = List[array_nested_model_class]  # type: ignore[valid-type,misc]
+
                     fields[field_name.lower()] = (array_type, Field(alias=field_name))
                 else:
                     # Handle array of primitives: ["str"] or ["int"]
@@ -104,6 +111,7 @@ class SchemaGenerator:
                     # Even though `array_primitive_class` contains a valid type like `str` or `int`, mypy cannot
                     # statically verify this because the type is determined at runtime from the TYPE_MAP lookup.
                     array_type = List[array_primitive_class]  # type: ignore[valid-type,misc]
+
                     fields[field_name.lower()] = (array_type, Field(alias=field_name))
             else:
                 # Default field_type is always ["str"] here
@@ -185,19 +193,21 @@ class SchemaGenerator:
                     # Handle arrays of nested objects within a already nested object
                     nested_array_item_model_class: Type[BaseModel] = cls.create_nested_record_model(f"ParentField_{parent_field_name}_NestedField_{nested_field_name}", nested_field_type[0])
 
-                    # NOTE: Same mypy limitation with dynamic nested model types in arrays
+                    # NOTE: Same static type checker limitation with dynamic nested model types in arrays
                     #
                     # This is the same issue as above but occurs in deeply nested schemas where we have
                     # arrays of objects within nested objects (e.g., User.Roles[].Permissions[]).
-                    # MyPy cannot statically validate the dynamically created nested model type.
+                    # Static type checkers cannot validate the dynamically created nested model type.
                     nested_array_type = List[nested_array_item_model_class]  # type: ignore[valid-type,misc]
+
                     nested_fields[nested_field_name.lower()] = (nested_array_type, Field(alias=nested_field_name))
                 else:
                     # Handle arrays of primitives within nested objects
                     nested_primitive_class: Type[Any] = cls.TYPE_MAP.get(str(nested_field_type[0]).lower(), str)
 
-                    # NOTE: Same mypy limitation for primitive arrays in nested contexts
+                    # NOTE: Same static type checker limitation for primitive arrays in nested contexts
                     nested_array_type = List[nested_primitive_class]  # type: ignore[valid-type,misc]
+
                     nested_fields[nested_field_name.lower()] = (nested_array_type, Field(alias=nested_field_name))
             else:
                 python_type: Optional[Type[Any]] = cls.TYPE_MAP.get(str(nested_field_type).lower())
@@ -461,20 +471,4 @@ class SchemaGenerator:
             # Returns "schema_key"
             ```
         """
-        if transformation_mode == constants.LOWERCASE_KEYS:
-            return key.lower()
-        elif transformation_mode == constants.UPPERCASE_KEYS:
-            return key.upper()
-        elif transformation_mode == constants.SNAKE_CASE_KEYS:
-            # Handle sequences of capitals followed by lowercase (XMLParser -> XML_Parser)
-            key = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', key)
-
-            # Handle lowercase/digit followed by uppercase (camelCase -> camel_Case, test1Data -> test1_Data)
-            key = re.sub(r'([a-z])([A-Z])', r'\1_\2', key)
-
-            # Handle special cases with numbers (ID2Name -> ID2_Name)
-            key = re.sub(r'([0-9])([A-Z])', r'\1_\2', key)
-
-            return key.lower()
-        else:
-            return key
+        return SchemaKeyTransformer.transform_key(key, transformation_mode)

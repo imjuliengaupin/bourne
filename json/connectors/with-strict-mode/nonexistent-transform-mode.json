@@ -3,7 +3,7 @@
   "source_path": "json/connectors/with-strict-mode/data/single-record-strict.json",
   "expected_schema": {
     "ID": "int",
-    "Timestamp": "str"
+    "CreatedOn": "str"
   },
   "transform_mode": "nonexistent_transform_mode",
   "strict_mode": true

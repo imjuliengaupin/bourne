@@ -3,6 +3,6 @@
   "source_path": "json/connectors/default/data/multi-record.json",
   "expected_schema": {
     "ID": "int",
-    "Timestamp": "str"
+    "CreatedOn": "str"
   }
 }

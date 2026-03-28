@@ -1,27 +1,16 @@
 
-import inspect
 import time
-from types import FrameType
-from typing import List, Optional
+from typing import List
+
+from core.base_utility import IntrospectionMixin
 
 
-class Logger:
+class Logger(IntrospectionMixin):
 
     def __init__(self, max_logs: int, debug_mode_enabled: bool) -> None:
         self.max_logs: int = max(0, max_logs)
         self.debug_mode_enabled: bool = debug_mode_enabled
         self.logs: List[str] = []
-
-    def get_class_label(self) -> str:
-        return type(self).__name__
-
-    def get_caller_method(self) -> str:
-        frame: Optional[FrameType] = inspect.currentframe()
-
-        if frame is not None and frame.f_back is not None:
-            return frame.f_back.f_code.co_name + "()"
-
-        return "unknown_caller_method()"
 
     def get_timestamp(self) -> str:
         return time.strftime("%Y-%m-%d %H:%M:%S")
